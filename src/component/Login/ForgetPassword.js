@@ -1,15 +1,14 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
-import MainNavigator from './src/naviagation/MainNavigator'
 
-const App = () => {
+const ForgetPassword = () => {
   return (
-    <MainNavigator />
-
-
+    <View>
+      <Text>ForgetPassword</Text>
+    </View>
   )
 }
 
-export default App
+export default ForgetPassword
 
 const styles = StyleSheet.create({})

@@ -1,15 +1,14 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
-import MainNavigator from './src/naviagation/MainNavigator'
 
-const App = () => {
+const UsserScreen = () => {
   return (
-    <MainNavigator />
-
-
+    <View>
+      <Text>UsserScreen</Text>
+    </View>
   )
 }
 
-export default App
+export default UsserScreen
 
 const styles = StyleSheet.create({})
