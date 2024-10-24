@@ -4,6 +4,7 @@ import {NavigationContainer} from '@react-navigation/native';
 import LoginScreen from '../screens/LoginScreen';
 import TabNavigator from './TabNavigator';
 import ListFood from '../component/Home/ListFood';
+import DishDetail from '../component/Food/DishDetail';
 
 const Stack = createStackNavigator();
 
@@ -39,6 +40,23 @@ const MainNavigator = () => {
               backgroundColor: '#4c8d6e',
             },
             headerTintColor: '#fff',
+          }}
+        />
+
+
+<Stack.Screen
+          name="DishDetail"
+          component={DishDetail}
+          options={{
+            headerShown: true,
+            headerTitle:'Chi tiết món ăn',
+            useNativeDriver: true,
+            gestureEnabled: true,
+            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+            headerStyle: {
+              backgroundColor: '#fff',
+            },
+            headerTintColor: 'black',
           }}
         />
 

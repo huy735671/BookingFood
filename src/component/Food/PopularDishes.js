@@ -1,9 +1,17 @@
+import { useNavigation } from '@react-navigation/native';
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native';
 
 const PopularDishes = ({ dishes }) => {
   const [pressedIndex, setPressedIndex] = useState(null);
+  const navigation = useNavigation();
 
+
+
+
+  const handlePress = (dish) =>{
+    navigation.navigate('DishDetail', {dish});
+  };
   return (
     <View style={styles.container}>
       {dishes.map((dish, index) => (
@@ -15,6 +23,7 @@ const PopularDishes = ({ dishes }) => {
           ]}
           onPressIn={() => setPressedIndex(index)} 
           onPressOut={() => setPressedIndex(null)} 
+          onPress={()=> handlePress(dish)}
         >
           <Image source={{ uri: dish.image }} style={styles.dishImage} />
           <View style={styles.dishInfo}>

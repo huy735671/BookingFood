@@ -3,8 +3,6 @@ import {
   Text,
   View,
   ScrollView,
-  Image,
-  TouchableOpacity,
   StatusBar,
 } from 'react-native';
 import React from 'react';
@@ -20,21 +18,21 @@ const HomeScreen = () => {
     {
       id: 1,
       name: 'Pizza Margherita',
-      image: 'https://example.com/pizza.jpg',
+      image: 'https://nz.ooni.com/cdn/shop/articles/20220211142645-margherita-9920.jpg?crop=center&height=800&v=1680290572&width=800',
       price: '150.000 VND',
       store: 'Pizza Store',
     },
     {
       id: 2,
       name: 'Sushi',
-      image: 'https://example.com/sushi.jpg',
+      image: 'https://sushiworld.com.vn/wp-content/uploads/2023/11/c.jpg',
       price: '200.000 VND',
       store: 'Sushi Shop',
     },
     {
       id: 3,
       name: 'Burger',
-      image: 'https://example.com/burger.jpg',
+      image: 'https://www.foodandwine.com/thmb/DI29Houjc_ccAtFKly0BbVsusHc=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/crispy-comte-cheesburgers-FT-RECIPE0921-6166c6552b7148e8a8561f7765ddf20b.jpg',
       price: '120.000 VND',
       store: 'Burger Joint',
     },
