@@ -7,10 +7,10 @@ const PopularDishes = ({ dishes }) => {
   const navigation = useNavigation();
 
 
-
+ 
 
   const handlePress = (dish) =>{
-    navigation.navigate('DishDetail', {dish});
+    navigation.navigate('MenuDish', { selectedDish: dish });
   };
   return (
     <View style={styles.container}>

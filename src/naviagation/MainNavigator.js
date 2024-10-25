@@ -1,21 +1,23 @@
 import React from 'react';
-import {CardStyleInterpolators, createStackNavigator} from '@react-navigation/stack';
+import {
+  CardStyleInterpolators,
+  createStackNavigator,
+} from '@react-navigation/stack';
 import {NavigationContainer} from '@react-navigation/native';
 import LoginScreen from '../screens/LoginScreen';
 import TabNavigator from './TabNavigator';
 import ListFood from '../component/Home/ListFood';
 import DishDetail from '../component/Food/DishDetail';
+import MenuDish from '../component/Food/MenuDish';
 
 const Stack = createStackNavigator();
 
 const MainNavigator = () => {
   return (
     <NavigationContainer>
-
       <Stack.Navigator
         initialRouteName="Login"
         screenOptions={{headerShown: false}}>
-
         <Stack.Screen
           name="Root"
           component={TabNavigator}
@@ -24,8 +26,6 @@ const MainNavigator = () => {
           }}
         />
         <Stack.Screen name="Login" component={LoginScreen} />
-
-
 
         <Stack.Screen
           name="ListFood"
@@ -42,14 +42,12 @@ const MainNavigator = () => {
             headerTintColor: '#fff',
           }}
         />
-
-
-<Stack.Screen
-          name="DishDetail"
-          component={DishDetail}
+        <Stack.Screen
+          name="MenuDish"
+          component={MenuDish}
           options={{
-            headerShown: true,
-            headerTitle:'Chi tiết món ăn',
+            headerShown: false,
+            headerTitle: 'Thực đơn quán',
             useNativeDriver: true,
             gestureEnabled: true,
             cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
@@ -59,7 +57,21 @@ const MainNavigator = () => {
             headerTintColor: 'black',
           }}
         />
-
+        <Stack.Screen
+          name="DishDetail"
+          component={DishDetail}
+          options={{
+            headerShown: true,
+            headerTitle: 'Chi tiết món ăn',
+            useNativeDriver: true,
+            gestureEnabled: true,
+            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+            headerStyle: {
+              backgroundColor: '#fff',
+            },
+            headerTintColor: 'black',
+          }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
