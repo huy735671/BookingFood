@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
     backgroundColor: 'rgba(255, 255, 255, 0.5)',
-    borderRadius: sizes.radius,
+    borderRadius: 10,
   },
   searchIcon: {
     padding: 10,

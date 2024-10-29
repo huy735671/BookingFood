@@ -10,6 +10,7 @@ import ListFood from '../component/Home/ListFood';
 import DishDetail from '../component/Food/DishDetail';
 import MenuDish from '../component/Food/MenuDish';
 import OrderDetails from '../component/Oder/OderDetails';
+import PaymentSuccess from '../screens/PaymentSuccess';
 
 const Stack = createStackNavigator();
 
@@ -79,6 +80,22 @@ const MainNavigator = () => {
           component={OrderDetails}
           options={{
             headerShown: true,
+            headerTitle: 'Thanh toán đơn hàng',
+            useNativeDriver: true,
+            gestureEnabled: true,
+            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+            headerStyle: {
+              backgroundColor: '#fff',
+            },
+            headerTintColor: 'black',
+          }}
+        />
+
+<Stack.Screen
+          name="PaymentSuccess"
+          component={PaymentSuccess}
+          options={{
+            headerShown: false,
             headerTitle: 'Thanh toán đơn hàng',
             useNativeDriver: true,
             gestureEnabled: true,
