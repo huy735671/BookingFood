@@ -4,8 +4,8 @@ import {colors} from '../../constants/theme';
 
 const SpecialOffer = ({navigation}) => {
   const handlePress = () => {
-    // Điều hướng tới một trang rỗng
-    navigation.navigate('SpecialOfferDetails'); // Bạn có thể thêm route này vào navigation stack
+ 
+    navigation.navigate('SpecialOfferDetails'); 
   };
 
   return (

@@ -18,13 +18,13 @@ const styles = StyleSheet.create({
   },
   activeTab: {
     borderBottomWidth: 2,
-    borderBottomColor: 'blue', // Màu sắc của tab đang hoạt động
+    borderBottomColor: 'blue', 
   },
   tabText: {
     color: 'black',
   },
   activeTabText: {
-    fontWeight: 'bold', // Đậm hơn cho tab đang hoạt động
+    fontWeight: 'bold', 
   },
 });
 

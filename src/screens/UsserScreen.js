@@ -20,11 +20,11 @@ const UsserScreen = () => {
       />
       <View style={styles.imgBox}>
         <Image
-          source={require('../../assets/images/users/32.jpeg')}
+          source={require('../../assets/images/users/35.jpeg')}
           style={styles.imgContainer}
         />
-        <Text style={styles.titleUser}>Jesica</Text>
-        <Text style={styles.emailUser}>jesica@gmail.com</Text>
+        <Text style={styles.titleUser}>Huy Demo</Text>
+        <Text style={styles.emailUser}>huydemo@gmail.com</Text>
       </View>
       <View>
         <ProfileService />
@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   imgBox: {
-    height: 300,
+    height: 250,
     marginTop: 40,
     justifyContent: 'center',
     backgroundColor: colors.green,

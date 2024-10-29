@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
 import CheckBox from '@react-native-community/checkbox';
 import { colors, sizes } from '../constants/theme';
+import { useNavigation } from '@react-navigation/native';
 
 const CartScreen = () => {
+  const navigation = useNavigation();
   const [items, setItems] = useState([
     { id: '1', name: 'Bánh mì thịt', price: 10000, quantity: 1, selected: false, store: 'Cửa hàng A' },
     { id: '2', name: 'Bánh mì chả cá', price: 20000, quantity: 1, selected: false, store: 'Cửa hàng A' },
@@ -38,7 +40,12 @@ const CartScreen = () => {
   }, 0);
 
   const handleOrder = () => {
-    console.log("Đặt hàng với tổng giá: ", totalPrice);
+    const orderedItems = items.filter(item => item.selected);
+    if (orderedItems.length > 0) {
+      navigation.navigate('OrderDetails', { items: orderedItems }); 
+    } else {
+      alert("Bạn chưa chọn món nào để đặt hàng!");
+    }
   };
 
   const groupedItems = items.reduce((acc, item) => {
@@ -92,9 +99,9 @@ const CartScreen = () => {
         <Text style={styles.totalAmount}>{formatCurrency(totalPrice)}</Text>
         </View>
       
-      <TouchableOpacity style={styles.orderButton} onPress={handleOrder}>
+        <TouchableOpacity style={styles.orderButton} onPress={handleOrder}>
         <Text style={styles.orderButtonText}>Tiến hành đặt hàng</Text>
-      </TouchableOpacity> 
+      </TouchableOpacity>
       </View>
     </SafeAreaView>
   );

@@ -9,6 +9,7 @@ import TabNavigator from './TabNavigator';
 import ListFood from '../component/Home/ListFood';
 import DishDetail from '../component/Food/DishDetail';
 import MenuDish from '../component/Food/MenuDish';
+import OrderDetails from '../component/Oder/OderDetails';
 
 const Stack = createStackNavigator();
 
@@ -61,8 +62,24 @@ const MainNavigator = () => {
           name="DishDetail"
           component={DishDetail}
           options={{
-            headerShown: true,
+            headerShown: false,
             headerTitle: 'Chi tiết món ăn',
+            useNativeDriver: true,
+            gestureEnabled: true,
+            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+            headerStyle: {
+              backgroundColor: '#fff',
+            },
+            headerTintColor: 'black',
+          }}
+        />
+
+        <Stack.Screen
+          name="OrderDetails"
+          component={OrderDetails}
+          options={{
+            headerShown: true,
+            headerTitle: 'Thanh toán đơn hàng',
             useNativeDriver: true,
             gestureEnabled: true,
             cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,

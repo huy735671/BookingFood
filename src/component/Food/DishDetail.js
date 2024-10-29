@@ -1,14 +1,26 @@
-import { Alert, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, TextInput } from 'react-native';
-import React, { useState } from 'react';
-import { colors, sizes } from '../../constants/theme';
+import {
+  Alert,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  TextInput,
+  StatusBar,
+} from 'react-native';
+import React, {useState} from 'react';
+import {colors, sizes} from '../../constants/theme';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
-const DishDetail = ({ route }) => {
-  const { dish } = route.params;
+const DishDetail = ({route, navigation}) => {
+  // Thêm navigation vào props
+  const {dish} = route.params;
   const defaultImage =
     'https://img.lovepik.com/free_png/32/22/38/41c58PICaBUM9pReH3a9u_PIC2018.png_860.png';
   const dishImage = dish.image ? dish.image : defaultImage;
 
-  const [note, setNote] = useState(''); // State để lưu ý cho quán
+  const [note, setNote] = useState('');
 
   const handlerAddToCart = () => {
     Alert.alert('Thông báo', `${dish.name} đã được thêm vào giỏ hàng`);
@@ -17,18 +29,35 @@ const DishDetail = ({ route }) => {
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <Image source={{ uri: dishImage }} style={styles.dishImage} />
+        <StatusBar
+          barStyle="light-content"
+          translucent
+          backgroundColor="rgba(0,0,0,0)"
+        />
+
+        <View style={styles.imageContainer}>
+          <Image source={{uri: dishImage}} style={styles.dishImage} />
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}>
+            <Icon name="chevron-left" size={24} color="white" />
+          </TouchableOpacity>
+        </View>
+
         <View style={styles.dishInfo}>
           <Text style={styles.dishName}>{dish.name}</Text>
-          {/* <Text style={styles.dishPrice}>{dish.price}</Text> */}
-          {/* <Text style={styles.storeName}>{dish.store}</Text> */}
+
           <Text style={styles.description}>
             Mô tả:
-            {dish.description ? dish.description : ' Không có mô tả nào về món ăn'}
+            {dish.description
+              ? dish.description
+              : ' Không có mô tả nào về món ăn'}
           </Text>
         </View>
 
-        <Text style={styles.noteLabel}>Thêm lưu ý cho quán: (Không bắt buộc)</Text>
+        <Text style={styles.noteLabel}>
+          Thêm lưu ý cho quán: (Không bắt buộc)
+        </Text>
         <TextInput
           style={styles.noteInput}
           placeholder="Nhập lưu ý của bạn ở đây"
@@ -41,7 +70,9 @@ const DishDetail = ({ route }) => {
       </ScrollView>
 
       <TouchableOpacity style={styles.addButton} onPress={handlerAddToCart}>
-        <Text style={styles.addButtonText}>Thêm vào giỏ hàng - {dish.price}</Text>
+        <Text style={styles.addButtonText}>
+          Thêm vào giỏ hàng - {dish.price}
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -55,13 +86,26 @@ const styles = StyleSheet.create({
     backgroundColor: colors.light,
   },
   scrollContainer: {
-    paddingBottom: 100, 
+    paddingBottom: 100,
+  },
+  imageContainer: {
+    position: 'relative', 
   },
   dishImage: {
     width: '100%',
     height: 250,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
+  },
+  backButton: {
+    padding: 10,
+    position: 'absolute',
+    zIndex: 1,
+    top: 40,
+    left: 10,
+    borderWidth: 1,
+    backgroundColor: colors.primary,
+    borderRadius: 30,
   },
   dishInfo: {
     padding: 20,
@@ -101,7 +145,6 @@ const styles = StyleSheet.create({
     padding: 10,
     marginHorizontal: 20,
     marginBottom: 20,
-    
   },
   addButton: {
     backgroundColor: colors.green,

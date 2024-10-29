@@ -6,7 +6,7 @@ import { colors, sizes } from '../../constants/theme';
 const OptionsList = () => {
   const navigation = useNavigation();
   
-  // Danh sách tùy chọn với hình ảnh tương ứng
+
   const options = [
     {
       name: 'Trà sữa',
