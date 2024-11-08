@@ -1,34 +1,59 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native';
+import firestore from '@react-native-firebase/firestore';
 
 const PopularDishes = ({ dishes }) => {
+  const [dishesWithStore, setDishesWithStore] = useState([]);
   const [pressedIndex, setPressedIndex] = useState(null);
   const navigation = useNavigation();
 
+  useEffect(() => {
+    const fetchStoreNames = async () => {
+      try {
+        const updatedDishes = await Promise.all(
+          dishes.map(async (dish) => {
+            const userDoc = await firestore().collection('users').doc(dish.ownerEmail).get();
+            const storeName = userDoc.exists && userDoc.data().storeName ? userDoc.data().storeName : 'Đang cập nhật';
+            return { ...dish, store: storeName };
+          })
+        );
+        setDishesWithStore(updatedDishes);
+      } catch (error) {
+        console.error('Error fetching store names:', error);
+      }
+    };
+  
+    fetchStoreNames();
+  }, [dishes]);
+  
 
- 
-
-  const handlePress = (dish) =>{
+  const handlePress = (dish) => {
     navigation.navigate('MenuDish', { selectedDish: dish });
   };
+
+  const formatPrice = (price) => {
+    if (!price) return '';
+    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  };
+
   return (
     <View style={styles.container}>
-      {dishes.map((dish, index) => (
+      {dishesWithStore.map((dish, index) => (
         <TouchableOpacity
           key={dish.id}
           style={[
             styles.dishCard,
             pressedIndex === index && styles.pressedCard,
           ]}
-          onPressIn={() => setPressedIndex(index)} 
-          onPressOut={() => setPressedIndex(null)} 
-          onPress={()=> handlePress(dish)}
+          onPressIn={() => setPressedIndex(index)}
+          onPressOut={() => setPressedIndex(null)}
+          onPress={() => handlePress(dish)}
         >
           <Image source={{ uri: dish.image }} style={styles.dishImage} />
           <View style={styles.dishInfo}>
-            <Text style={styles.dishName}>{dish.name}</Text>
-            <Text style={styles.dishPrice}>{dish.price}</Text>
+            <Text style={styles.dishName}>{dish.dishName}</Text>
+            <Text style={styles.dishPrice}>{formatPrice(dish.price)}đ</Text>
             <Text style={styles.storeName}>Cửa hàng: {dish.store}</Text>
           </View>
         </TouchableOpacity>
@@ -44,7 +69,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   dishCard: {
-    width: '48%', // Chia đôi không gian
+    width: '48%',
     backgroundColor: '#fff',
     borderRadius: 15,
     marginBottom: 15,
@@ -56,8 +81,8 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   pressedCard: {
-    transform: [{ scale: 0.95 }], // Thu nhỏ khi nhấn
-    shadowOpacity: 0.1, // Giảm độ bóng khi nhấn
+    transform: [{ scale: 0.95 }],
+    shadowOpacity: 0.1,
   },
   dishImage: {
     width: '100%',

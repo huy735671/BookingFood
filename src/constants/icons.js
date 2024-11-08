@@ -13,10 +13,19 @@ const Add = require('../../assets/icons/Add.png');
 const Graph = require('../../assets/icons/Graph.png');
 const Cart = require('../../assets/icons/Cart.png');
 const Shipper = require('../../assets/icons/shipper.png');
+const Bag = require('../../assets/icons/Bag.png');
+const list = require('../../assets/icons/list.png');
+const settings = require('../../assets/icons/settings.png');
+const Key = require('../../assets/icons/Key.png');
+const Email = require('../../assets/icons/Email.png');
+const Phone = require('../../assets/icons/Phone.png');
+const arrowBottom = require('../../assets/icons/arrowBottom.png');
+const close = require('../../assets/icons/close.png');
+const edit = require('../../assets/icons/edit.png');
+const trash = require('../../assets/icons/trash.png');
 
 
-
-
+ 
 export default {
   Home,
   FavoriteFilled,
@@ -33,4 +42,14 @@ export default {
   Graph,
   Cart,
   Shipper,
+  Bag,
+  list,
+  settings,
+  Email,
+  Key,
+  Phone,
+  arrowBottom,
+  close,
+  edit,
+  trash,
 };

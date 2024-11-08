@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,69 +9,51 @@ import {
   StatusBar,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import {colors, sizes} from '../../constants/theme';
-import {useNavigation} from '@react-navigation/native';
-import Tab from '../Tab';
+import { colors, sizes } from '../../constants/theme';
+import { useNavigation } from '@react-navigation/native';
 import FavoriteButton from '../FavoriteButton';
+import firestore from '@react-native-firebase/firestore';
 
-const MenuDish = ({route}) => {
-  const {selectedDish} = route.params || {};
+const MenuDish = ({ route }) => {
+  const { selectedDish } = route.params || {};
+  const [otherDishes, setOtherDishes] = useState([]);
   const navigation = useNavigation();
-  const [activeTab, setActiveTab] = useState('1');
 
-  const handlePress = dish => {
-    navigation.navigate('DishDetail', {dish});
+  useEffect(() => {
+    if (selectedDish?.ownerEmail) {
+      const fetchOtherDishes = async () => {
+        try {
+          const snapshot = await firestore()
+            .collection('dishes')
+            .where('ownerEmail', '==', selectedDish.ownerEmail)
+            .get();
+  
+          const dishesList = snapshot.docs.map(doc => doc.data());
+          
+          const filteredDishes = dishesList.filter(dish => dish.dishName !== selectedDish.dishName);
+          setOtherDishes(filteredDishes);
+        } catch (error) {
+          console.error('Error fetching dishes: ', error);
+        }
+      };
+  
+      fetchOtherDishes();
+    }
+  }, [selectedDish]);
+  
+
+  const handlePress = (dish) => {
+    navigation.navigate('DishDetail', { dish });
   };
-
-  const dishes = [
-    {
-      id: '1',
-      name: 'Món 1',
-      price: '50.000đ',
-      image: 'https://example.com/image1.jpg',
-      categoryId: '1',
-    },
-    {
-      id: '2',
-      name: 'Món 2',
-      price: '70.000đ',
-      image: 'https://example.com/image2.jpg',
-      categoryId: '1',
-    },
-    {
-      id: '3',
-      name: 'Món 3',
-      price: '30.000đ',
-      image: 'https://example.com/image3.jpg',
-      categoryId: '2',
-    },
-    {
-      id: '4',
-      name: 'Món 4',
-      price: '90.000đ',
-      image: 'https://example.com/image4.jpg',
-      categoryId: '2',
-    },
-    {
-      id: '5',
-      name: 'Món 5',
-      price: '40.000đ',
-      image: 'https://example.com/image5.jpg',
-      categoryId: '3',
-    },
-    {
-      id: '6',
-      name: 'Món 6',
-      price: '80.000đ',
-      image: 'https://example.com/image6.jpg',
-      categoryId: '3',
-    },
-  ];
 
   const limitCharacters = (text, maxChars) => {
     return text.length > maxChars ? text.slice(0, maxChars) + '...' : text;
   };
-  const filteredDishes = dishes.filter(dish => dish.categoryId === activeTab);
+
+  const formatPrice = (price) => {
+    if (!price) return '';
+    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  };
 
   return (
     <View style={styles.container}>
@@ -109,10 +91,10 @@ const MenuDish = ({route}) => {
       <TouchableOpacity
         style={styles.dishItem}
         onPress={() => handlePress(selectedDish)}>
-        <Image source={{uri: selectedDish.image}} style={styles.dishImage} />
+        <Image source={{ uri: selectedDish.image }} style={styles.dishImage} />
         <View style={styles.dishDetails}>
-          <Text style={styles.dishName}>{selectedDish.name}</Text>
-          <Text style={styles.dishPrice}>{selectedDish.price}</Text>
+          <Text style={styles.dishName}>{selectedDish.dishName}</Text>
+          <Text style={styles.dishPrice}>{formatPrice(selectedDish.price)}</Text>
         </View>
         <TouchableOpacity style={styles.cartIcon}>
           <Icon name="plus" size={20} color="black" />
@@ -121,34 +103,16 @@ const MenuDish = ({route}) => {
 
       <Text style={styles.titleText}>Các món khác</Text>
 
-      <View style={styles.tabContainer}>
-        <Tab
-          title="Danh mục 1"
-          isActive={activeTab === '1'}
-          onPress={() => setActiveTab('1')}
-        />
-        <Tab
-          title="Danh mục 2"
-          isActive={activeTab === '2'}
-          onPress={() => setActiveTab('2')}
-        />
-        <Tab
-          title="Danh mục 3"
-          isActive={activeTab === '3'}
-          onPress={() => setActiveTab('3')}
-        />
-      </View>
-
-      <ScrollView>
-        {filteredDishes.map(item => (
+      <ScrollView style={styles.otherDishesList}>
+        {otherDishes.map((dish, index) => (
           <TouchableOpacity
-            key={item.id}
+            key={index}
             style={styles.dishItem}
-            onPress={() => handlePress(item)}>
-            <Image source={{uri: item.image}} style={styles.dishImage} />
+            onPress={() => handlePress(dish)}>
+            <Image source={{ uri: dish.image }} style={styles.dishImage} />
             <View style={styles.dishDetails}>
-              <Text style={styles.dishName}>{item.name}</Text>
-              <Text style={styles.dishPrice}>{item.price}</Text>
+              <Text style={styles.dishName}>{dish.dishName}</Text>
+              <Text style={styles.dishPrice}>{formatPrice(dish.price)}</Text>
             </View>
             <TouchableOpacity style={styles.cartIcon}>
               <Icon name="plus" size={20} color="black" />
@@ -176,7 +140,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 30,
     right: 10,
-
     borderRadius: 20,
     padding: 5,
   },
@@ -217,12 +180,6 @@ const styles = StyleSheet.create({
     fontSize: sizes.title,
     padding: 10,
   },
-  tabContainer: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: 'grey',
-    marginBottom: 10,
-  },
   dishItem: {
     marginHorizontal: 10,
     flexDirection: 'row',
@@ -255,6 +212,9 @@ const styles = StyleSheet.create({
   },
   cartIcon: {
     marginLeft: 10,
+  },
+  otherDishesList: {
+    marginTop: 20,
   },
 });
 

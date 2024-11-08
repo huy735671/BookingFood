@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from 'react';
 import {
   Image,
   SafeAreaView,
@@ -6,25 +7,48 @@ import {
   Text,
   View,
 } from 'react-native';
-import React from 'react';
-import {colors, sizes} from '../constants/theme';
+import { colors, sizes } from '../constants/theme';
 import ProfileService from '../component/Profile/ProfileService';
+import firestore from '@react-native-firebase/firestore';
+import auth from '@react-native-firebase/auth';
 
 const UsserScreen = () => {
+  const [userData, setUserData] = useState({
+    fullName: '',
+    email: '',
+    avatarUrl: null,
+  });
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const currentUser = auth().currentUser;
+      if (currentUser) {
+        try {
+          const userDoc = await firestore().collection('users').doc(currentUser.email).get();
+          if (userDoc.exists) {
+            setUserData(userDoc.data());
+          } else {
+            console.log('User data not found');
+          }
+        } catch (error) {
+          console.error('Error fetching user data: ', error);
+        }
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar
-        barStyle="light-content"
-        translucent
-        backgroundColor='#4c8d6e'
-      />
+      <StatusBar barStyle="light-content" translucent backgroundColor='#4c8d6e' />
       <View style={styles.imgBox}>
         <Image
-          source={require('../../assets/images/users/35.jpeg')}
+          source={userData.avatarUrl ? { uri: userData.avatarUrl } : require('../../assets/images/users/35.jpeg')}
           style={styles.imgContainer}
         />
-        <Text style={styles.titleUser}>Huy Demo</Text>
-        <Text style={styles.emailUser}>huydemo@gmail.com</Text>
+        <Text style={styles.titleUser}>{userData.fullName || 'Tên người dùng'}</Text>
+        <Text style={styles.emailUser}>{userData.email || 'Email người dùng'}</Text>
       </View>
       <View>
         <ProfileService />
@@ -47,6 +71,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   imgContainer: {
+    width: 120,
+    height: 120,
     borderRadius: 80,
   },
   titleUser: {
@@ -62,4 +88,5 @@ const styles = StyleSheet.create({
   bodyContaier: {
     borderWidth: 1,
   },
+
 });

@@ -1,35 +1,104 @@
-import {StatusBar, StyleSheet, Text, View} from 'react-native';
-import React, {useState} from 'react';
-import FooterLogin from '../component/Login/FooterLogin';
-import LoginHeader from '../component/Login/LoginHeader';
-import Login from '../component/Login/Login';
-import SignUp from '../component/Login/SignUp';
+import React from 'react';
+import { View, StyleSheet, StatusBar, Text, Image, TouchableOpacity, ImageBackground } from 'react-native';
+import { colors, sizes } from '../constants/theme';
 
-const SIGN_IN = 'SIGN_IN';
-const SIGN_UP = 'SIGN_UP';
-const LoginScreen = () => {
-  const [page, setPage] = useState('SIGN_IN');
-
+const LoginScreen = ({ navigation }) => {
   return (
-    <View style={{width: '100%', height: '100%'}}>
+    <View style={styles.container}>
       <StatusBar
         barStyle="light-content"
         translucent
-        backgroundColor="rgba(0,0,0,0)"
+        backgroundColor="transparent"
       />
-      <View style={{width: '100%', height: '25%'}}>
-        <LoginHeader page={page} setPage={setPage}/>
-      </View>
-      <View style={{height: '60%', width: '100%', backgroundColor: '#eeeeee',}}>
-        {page === SIGN_IN ? <Login /> : <SignUp/>}
-      </View>
-      <View style={{flex: 1}}>
-        <FooterLogin />
-      </View>
+
+      <ImageBackground source={require('../../assets/images/background.jpg')} style={styles.background}>
+        <View style={styles.welcomeContainer}>
+
+          <Image source={require('../../assets/images/Logo.png')} style={styles.logo} />
+
+          <Text style={styles.welcomeText}>Chào mừng đến với QickEats</Text>
+
+          <View>
+            <Image source={require('../../assets/images/booking.png')} style={styles.image} />
+          </View>
+
+          <TouchableOpacity style={styles.registerButton} onPress={() => navigation.navigate('SignUp')}>
+            <Text style={styles.registerButtonText}>Đăng ký</Text>
+          </TouchableOpacity>
+
+          <View style={styles.loginContainer}>
+            <Text style={styles.alreadyText}>Đã có tài khoản? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('SignIn')}>
+              <Text style={styles.loginText}>Đăng nhập</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ImageBackground>
     </View>
   );
 };
 
-export default LoginScreen;
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  background: {
+    flex: 1,
+    resizeMode: 'cover', 
+  },
+  welcomeContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 40,
+  },
+  logo: {
+    width: 80, 
+    height: 80,     
+    alignSelf: 'flex-start',
+    marginLeft: 20,
+    marginTop: 40,
+  },
+  welcomeText: {
+    fontWeight: 'bold',
+    fontSize: sizes.title,
+    alignSelf: 'flex-start', 
+    marginLeft: 20,        
+    marginTop: 10,     
+    color: '#ffffff',      
+  },
+  image: {
+    marginTop: 50,
+    width: 350,
+    height: 350,
+  },
+  registerButton: {
+    backgroundColor: colors.green,
+    paddingVertical: 15,
+    width: '90%', 
+    borderRadius: 8,
+    marginTop: 50,
+    alignItems: 'center',
+  },
+  registerButtonText: {
+    color: '#fff',
+    fontSize: sizes.h2,
+    fontWeight: 'bold',
+  },
+  loginContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  alreadyText: {
+    color: '#ffffff',
+    fontSize: sizes.h3,
+  },
+  loginText: {
+    color: '#FFFF33', 
+    fontSize: sizes.h3,
+    textDecorationLine: 'underline',
+  },
+});
 
-const styles = StyleSheet.create({});
+export default LoginScreen;

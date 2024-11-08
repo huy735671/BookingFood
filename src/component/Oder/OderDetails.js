@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -11,27 +11,41 @@ import {
 import {useNavigation, useRoute} from '@react-navigation/native';
 import {colors, sizes} from '../../constants/theme';
 import Divider from '../Divider';
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
 
 const OrderDetails = () => {
   const route = useRoute();
   const {items} = route.params;
   const navigation = useNavigation();
+  const [userAddress, setUserAddress] = useState('');
+  const totalAmount = items.reduce((total, item) => {
+    if (item.selected && item.dishDetails?.price && item.quantity > 0) {
+      return total + item.dishDetails.price * item.quantity;
+    }
+    return total;
+  }, 0);
 
   const formatCurrency = amount => {
-    return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' ₫';
+    if (isNaN(amount) || amount === null || amount === undefined) {
+      return '0 đ';
+    }
+    return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' đ';
   };
 
-  const totalAmount = items.reduce(
-    (total, item) => total + item.price * item.quantity,
-    0,
-  );
-
-  const shippingFee = 15000; 
+  const shippingFee = 15000;
   const totalWithShipping = totalAmount + shippingFee;
 
   const groupedItems = items.reduce((acc, item) => {
-    if (!acc[item.store]) acc[item.store] = [];
-    acc[item.store].push(item);
+    if (!item.storeName) {
+      console.log(
+        `Item: ${item.dishName} is missing storeName, assigning default value.`,
+      );
+      item.storeName = 'Cửa hàng không rõ';
+    }
+
+    if (!acc[item.storeName]) acc[item.storeName] = [];
+    acc[item.storeName].push(item);
     return acc;
   }, {});
 
@@ -41,37 +55,106 @@ const OrderDetails = () => {
     setPaymentMethod(method);
   };
 
+  const handlePlaceOrder = async () => {
+    try {
+      const currentUser = auth().currentUser;
+      const userEmail = currentUser?.email; 
   
-  const handlePlaceOrder = () => {
-    navigation.navigate('PaymentSuccess', { 
-        items, 
-        totalWithShipping, 
-        shippingFee, 
-        totalAmount 
-    });
-};
+      const orderData = {
+        items: items.map(item => ({
+          dishName: item.dishName,
+          quantity: item.quantity,
+          price: item.dishDetails?.price,
+          storeName: item.storeName,
+          ownerEmail: item.dishDetails?.ownerEmail,
+          selectedOptions: item.selectedOptions,
+          status:'pending' ,
+        })),
+        totalAmount,
+        shippingFee,
+        totalWithShipping,
+        userAddress,
+        paymentMethod,
+        orderTime: firestore.FieldValue.serverTimestamp(),
+        customerEmail: userEmail,
+        customerAddress: userAddress,
+      };
+  
+      await firestore().collection('orders').add(orderData);
+  
+      await Promise.all(
+        items.map(item => firestore().collection('cart').doc(item.id).delete())
+      );
+  
+      navigation.navigate('PaymentSuccess', {
+        items: items.map(item => ({
+          ...item,
+          price: item.dishDetails?.price,
+        })),
+        totalWithShipping,
+        shippingFee,
+        totalAmount,
+        userAddress,
+        paymentMethod,
+      });
+    } catch (error) {
+      console.error('Error placing order:', error);
+    }
+  };
+  
+
+  useEffect(() => {
+    const fetchUserAddress = async () => {
+      try {
+        const currentUser = auth().currentUser;
+        if (currentUser) {
+          const userDoc = await firestore()
+            .collection('users')
+            .doc(currentUser.email)
+            .get();
+
+          if (userDoc.exists) {
+            setUserAddress(
+              userDoc.data()?.selectedAddress || 'Chưa có địa chỉ',
+            );
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user address:', error);
+      }
+    };
+
+    fetchUserAddress();
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>Tóm tắt đơn hàng</Text>
 
         <View style={styles.orderSummary}>
-          {Object.keys(groupedItems).map((store, index) => (
+          {Object.keys(groupedItems).map((storeName, index) => (
             <View
-              key={store}
+              key={`store-${storeName}-${index}`}
               style={[
                 styles.storeContainer,
                 index !== Object.keys(groupedItems).length - 1 &&
                   styles.separator,
               ]}>
-              <Text style={styles.storeTitle}>{store}</Text>
-              {groupedItems[store].map(item => (
-                <View key={item.id} style={styles.itemRow}>
+              <Text style={styles.storeTitle}>
+                {storeName ? storeName : 'Tên cửa hàng không có'}
+              </Text>
+              {groupedItems[storeName].map((item, itemIndex) => (
+                <View
+                  key={`item-${item.id || itemIndex}-${storeName}`}
+                  style={styles.itemRow}>
                   <Text style={styles.itemName}>
-                    {item.quantity}x {item.name}
+                    {item.quantity}x {item.dishName}
                   </Text>
                   <Text style={styles.itemPrice}>
-                    {formatCurrency(item.price * item.quantity)}
+                    {item.dishDetails?.price
+                      ? formatCurrency(item.dishDetails.price * item.quantity)
+                      : 'Giá không có'}
                   </Text>
                 </View>
               ))}
@@ -85,10 +168,10 @@ const OrderDetails = () => {
           <TextInput
             style={styles.input}
             placeholder="Địa chỉ"
-            value="123 Đường ABC, Phường XYZ, Bình Dương"
+            value={userAddress}
+            editable={false}
           />
           <Text style={styles.titleinfoUser}>Ghi chú</Text>
-
           <TextInput
             style={styles.input}
             placeholder="Ghi chú cho tài xế (Nếu có)"
@@ -99,28 +182,31 @@ const OrderDetails = () => {
           <Text style={styles.title}>Phương thức thanh toán</Text>
           <TouchableOpacity
             style={styles.checkboxRow}
-            onPress={() => handlePaymentMethodChange('cash')}
-          >
+            onPress={() => handlePaymentMethodChange('cash')}>
             <View style={styles.outerCheckbox}>
-              {paymentMethod === 'cash' && <View style={styles.innerCheckbox} />}
+              {paymentMethod === 'cash' && (
+                <View style={styles.innerCheckbox} />
+              )}
             </View>
             <Text>Tiền mặt</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.checkboxRow}
-            onPress={() => handlePaymentMethodChange('card')}
-          >
+            onPress={() => handlePaymentMethodChange('card')}>
             <View style={styles.outerCheckbox}>
-              {paymentMethod === 'card' && <View style={styles.innerCheckbox} />}
+              {paymentMethod === 'card' && (
+                <View style={styles.innerCheckbox} />
+              )}
             </View>
             <Text>Thẻ tín dụng/ghi nợ</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.checkboxRow}
-            onPress={() => handlePaymentMethodChange('momo')}
-          >
+            onPress={() => handlePaymentMethodChange('momo')}>
             <View style={styles.outerCheckbox}>
-              {paymentMethod === 'momo' && <View style={styles.innerCheckbox} />}
+              {paymentMethod === 'momo' && (
+                <View style={styles.innerCheckbox} />
+              )}
             </View>
             <Text>Ví MoMo</Text>
           </TouchableOpacity>
@@ -151,7 +237,7 @@ const OrderDetails = () => {
         <TouchableOpacity style={styles.totalButton} onPress={handlePlaceOrder}>
           <Text style={styles.totalText}>Đặt hàng: </Text>
           <Text style={styles.totalAmount}>
-             {formatCurrency(totalWithShipping)}
+            {formatCurrency(totalWithShipping)}
           </Text>
         </TouchableOpacity>
       </ScrollView>
@@ -243,19 +329,19 @@ const styles = StyleSheet.create({
   outerCheckbox: {
     width: 20,
     height: 20,
-    borderRadius: 15, 
+    borderRadius: 15,
     borderWidth: 2,
     borderColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
-    backgroundColor: '#fff', 
+    backgroundColor: '#fff',
   },
   innerCheckbox: {
     width: 10,
     height: 10,
-    borderRadius: 7.5, 
-    backgroundColor: colors.primary, 
+    borderRadius: 7.5,
+    backgroundColor: colors.primary,
   },
   summaryContainer: {
     padding: 10,
@@ -265,7 +351,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f8f8',
     marginBottom: 15,
   },
-
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

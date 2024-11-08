@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -11,29 +11,46 @@ import {
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {colors, sizes} from '../../constants/theme';
 import {useNavigation} from '@react-navigation/native';
+import firestore from '@react-native-firebase/firestore';
+import auth from '@react-native-firebase/auth';
 
 const ProfileService = () => {
   const [userInfo, setUserInfo] = useState({
-    username: 'Huy Demo',
-    email: 'huydemo@gmail.com',
-    phone: '0123456789',
+    fullName: '',
+    email: '',
+    phoneNumber: '',
   });
   const [isTwoFactorEnabled, setIsTwoFactorEnabled] = useState(false);
-  const [isEmailNotificationEnabled, setIsEmailNotificationEnabled] =
-    useState(false);
-  const [isPushNotificationEnabled, setIsPushNotificationEnabled] =
-    useState(false);
+  const [isEmailNotificationEnabled, setIsEmailNotificationEnabled] = useState(false);
+  const [isPushNotificationEnabled, setIsPushNotificationEnabled] = useState(false);
+
   const navigation = useNavigation();
 
-  const toggleTwoFactor = () =>
-    setIsTwoFactorEnabled(previousState => !previousState);
-  const toggleEmailNotification = () =>
-    setIsEmailNotificationEnabled(previousState => !previousState);
-  const togglePushNotification = () =>
-    setIsPushNotificationEnabled(previousState => !previousState);
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const currentUser = auth().currentUser;
+      if (currentUser) {
+        try {
+          const userDoc = await firestore().collection('users').doc(currentUser.email).get();
+          if (userDoc.exists) {
+            setUserInfo(userDoc.data());
+          } else {
+            console.log('User data not found');
+          }
+        } catch (error) {
+          console.error('Error fetching user data: ', error);
+        }
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  const toggleTwoFactor = () => setIsTwoFactorEnabled(prevState => !prevState);
+  const toggleEmailNotification = () => setIsEmailNotificationEnabled(prevState => !prevState);
+  const togglePushNotification = () => setIsPushNotificationEnabled(prevState => !prevState);
 
   const handleDeleteAccount = () => {};
-
   return (
     <ScrollView contentContainerStyle={{ paddingBottom: 280 }}>
       <View style={styles.serviceContainer}>
@@ -41,7 +58,7 @@ const ProfileService = () => {
           <Text>Họ và tên</Text>
           <TextInput
             style={styles.userInfoInput}
-            value={userInfo.username}
+            value={userInfo.fullName}
             editable={false}
             selectTextOnFocus={false}
           />
@@ -55,7 +72,7 @@ const ProfileService = () => {
           <Text>Số điện thoại</Text>
           <TextInput
             style={styles.userInfoInput}
-            value={userInfo.phone}
+            value={userInfo.phoneNumber}
             editable={false}
             selectTextOnFocus={false}
           />

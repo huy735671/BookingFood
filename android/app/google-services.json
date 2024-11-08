@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "873002618473",
+    "project_id": "storeauth-f792f",
+    "storage_bucket": "storeauth-f792f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:873002618473:android:565f036c4310955e519cf8",
+        "android_client_info": {
+          "package_name": "com.bookingfoodapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCiSMUXxy57GR_na2Q3Jawla9YURj0eBFY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:873002618473:android:86b4014886b06d2b519cf8",
+        "android_client_info": {
+          "package_name": "com.storeauth"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCiSMUXxy57GR_na2Q3Jawla9YURj0eBFY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

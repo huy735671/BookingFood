@@ -9,23 +9,83 @@ import {
   TextInput,
   StatusBar,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {colors, sizes} from '../../constants/theme';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import AddToCartModal from './AddToCartModal';
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
 
 const DishDetail = ({route, navigation}) => {
-  // Thêm navigation vào props
   const {dish} = route.params;
+  const [modalVisible, setModalVisible] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
+  const [note, setNote] = useState('');
+  const [options, setoptions] = useState([]);
+
   const defaultImage =
     'https://img.lovepik.com/free_png/32/22/38/41c58PICaBUM9pReH3a9u_PIC2018.png_860.png';
   const dishImage = dish.image ? dish.image : defaultImage;
 
-  const [note, setNote] = useState('');
+  useEffect(() => {
+    const user = auth().currentUser;
+    if (user) {
+      setUserEmail(user.email);
+    } else {
+      setUserEmail('Không có người dùng đăng nhập');
+    }
+  }, []);
 
-  const handlerAddToCart = () => {
-    Alert.alert('Thông báo', `${dish.name} đã được thêm vào giỏ hàng`);
+  useEffect(() => {
+    const fetchDishOptions = async () => {
+      try {
+        const optionsSnapshot = await firestore()
+          .collection('options')
+          .where('dishId', '==', dish.id)
+          .get();
+
+        const options = optionsSnapshot.docs.map(doc => doc.data().option);
+        setoptions(options || []); 
+      } catch (error) {
+        console.error('Error fetching dish options:', error);
+        setoptions([]);
+      }
+    };
+
+    if (dish) {
+      fetchDishOptions();
+    }
+  }, [dish]);
+
+  const handleAddToCart = (dish, selectedOptions) => {
+    const user = auth().currentUser;
+    if (user) {
+      const userEmail = user.email;
+
+      firestore()
+        .collection('cart')
+        .add({
+          email: userEmail,
+          dishId: dish.id,
+          dishName: dish.dishName,
+          selectedOptions: selectedOptions || [],
+          note: note,
+        })
+        .then(() => {
+          console.log('Món ăn đã được thêm vào giỏ hàng');
+        })
+        .catch(error => {
+          console.error('Lỗi khi lưu giỏ hàng: ', error);
+        });
+    } else {
+      console.log('Người dùng chưa đăng nhập');
+    }
   };
 
+  const formatPrice = price => {
+    if (!price) return '';
+    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  };
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -45,7 +105,7 @@ const DishDetail = ({route, navigation}) => {
         </View>
 
         <View style={styles.dishInfo}>
-          <Text style={styles.dishName}>{dish.name}</Text>
+          <Text style={styles.dishName}>{dish.dishName}</Text>
 
           <Text style={styles.description}>
             Mô tả:
@@ -69,11 +129,21 @@ const DishDetail = ({route, navigation}) => {
         />
       </ScrollView>
 
-      <TouchableOpacity style={styles.addButton} onPress={handlerAddToCart}>
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => setModalVisible(true)}>
         <Text style={styles.addButtonText}>
-          Thêm vào giỏ hàng - {dish.price}
+          Thêm vào giỏ hàng - {formatPrice(dish.price)}đ
         </Text>
       </TouchableOpacity>
+
+      <AddToCartModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        dish={dish}
+        dishOptions={options || []}
+        onAddToCart={handleAddToCart}
+      />
     </View>
   );
 };
@@ -89,7 +159,7 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   imageContainer: {
-    position: 'relative', 
+    position: 'relative',
   },
   dishImage: {
     width: '100%',

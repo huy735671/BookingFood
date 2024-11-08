@@ -15,15 +15,27 @@ import Divider from '../component/Divider';
 const PaymentSuccess = () => {
   const route = useRoute();
   const navigation = useNavigation();
-  const {items, totalWithShipping, shippingFee, totalAmount} = route.params;
+  const {items, totalWithShipping, shippingFee, totalAmount, userAddress, paymentMethod } = route.params;
 
   const formatCurrency = amount => {
     return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' ₫';
   };
 
-  // Tạo mã đơn hàng ngẫu nhiên
   const generateOrderNumber = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
+  };
+
+  const getPaymentMethodName = (method) => {
+    switch (method) {
+      case 'cash':
+        return 'Tiền mặt';
+      case 'card':
+        return 'Thẻ tín dụng';
+      case 'momo':
+        return 'Momo';
+      default:
+        return 'Không xác định';
+    }
   };
 
   return (
@@ -57,7 +69,7 @@ const PaymentSuccess = () => {
           {items.map(item => (
             <View key={item.id} style={styles.itemRow}>
               <Text style={styles.itemName}>
-                {item.quantity}x {item.name}
+                {item.quantity}x {item.dishName}
               </Text>
               <Text style={styles.itemPrice}>
                 {formatCurrency(item.price * item.quantity)}
@@ -83,18 +95,19 @@ const PaymentSuccess = () => {
               {formatCurrency(totalWithShipping)}
             </Text>
           </View>
-
-
         </View>
-
-
-
+        
         <View style={styles.summarycoluomn}>
           <Text style={styles.summaryText}>Địa chỉ giao hàng:</Text>
           <Text style={styles.totallocationText}>
-            123 Đường Lê Lợi, Quận 1, TP.HCM
+          {userAddress}
           </Text>
         </View>
+        <View style={styles.summarycoluomn}>
+          <Text style={styles.summaryText}>Phương thức thanh toán:</Text>
+          <Text style={styles.itemPrice}>{getPaymentMethodName(paymentMethod)}</Text>
+        </View>
+
         <TouchableOpacity
           style={styles.trackButton}
           onPress={() => alert('Theo dõi đơn hàng')}>
