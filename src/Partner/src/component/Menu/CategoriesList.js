@@ -83,7 +83,6 @@ const CategoriesList = () => {
     if (!userEmail) return;
 
     if (categoryId === 'all') {
-      // Lấy tất cả món ăn của quán hiện tại
       const dishesSnapshot = await firestore()
         .collection('dishes')
         .where('ownerEmail', '==', userEmail) 

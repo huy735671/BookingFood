@@ -108,7 +108,7 @@ const MenuDish = ({ route }) => {
           <TouchableOpacity
             key={index}
             style={styles.dishItem}
-            onPress={() => handlePress(dish)}>
+            onPress={() => handlePress(selectedDish)}>
             <Image source={{ uri: dish.image }} style={styles.dishImage} />
             <View style={styles.dishDetails}>
               <Text style={styles.dishName}>{dish.dishName}</Text>

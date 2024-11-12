@@ -243,6 +243,9 @@ const CartScreen = () => {
           right: 0,
           left: 0,
           padding: 20,
+          borderTopWidth:1,
+          backgroundColor:'#fff',
+          borderColor:'#ddd',
         }}>
         <View style={styles.footer}>
           <Text style={styles.totalText}>Tổng cộng:</Text>
@@ -268,6 +271,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    borderBottomWidth:1,
+    borderColor:'#ddd',
   },
   title: {
     fontSize: 24,

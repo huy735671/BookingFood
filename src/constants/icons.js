@@ -23,6 +23,8 @@ const arrowBottom = require('../../assets/icons/arrowBottom.png');
 const close = require('../../assets/icons/close.png');
 const edit = require('../../assets/icons/edit.png');
 const trash = require('../../assets/icons/trash.png');
+const history = require('../../assets/icons/history.png');
+const ArrowRight = require('../../assets/icons/ArrowRight.png');
 
 
  
@@ -51,5 +53,7 @@ export default {
   arrowBottom,
   close,
   edit,
+  history,
   trash,
+  ArrowRight,
 };

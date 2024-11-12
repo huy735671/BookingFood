@@ -17,6 +17,12 @@ import Login from '../component/Login/Login';
 import ManageCategoriesScreen from '../Partner/src/screens/ManageCategoriesScreen';
 import AddDishScreen from '../Partner/src/screens/AddDishScreen';
 import EditDishScreen from '../Partner/src/screens/EditDishScreen';
+import OrderDetailsScreen from '../Partner/src/component/Orders/OrderDetailsScreen';
+import HistoryOrders from '../component/History/HistoryOrders';
+import ProfileScreen from '../component/Profile/ProfileScreen';
+import MenuNavigator from './MenuNavigator';
+import AddUserScreen from '../Admin/component/Manage/AddUserScreen';
+import EditUserScreen from '../Admin/component/Manage/EditUserScreen';
 
 const Stack = createStackNavigator();
 
@@ -37,6 +43,13 @@ const MainNavigator = () => {
         <Stack.Screen
           name="Partner"
           component={PartnerTabNavigator}
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="Admin"
+          component={MenuNavigator}
           options={{
             headerShown: false,
           }}
@@ -159,7 +172,7 @@ const MainNavigator = () => {
           }}
         />
 
-<Stack.Screen
+        <Stack.Screen
           name="AddDishScreen"
           component={AddDishScreen}
           options={{
@@ -175,7 +188,7 @@ const MainNavigator = () => {
           }}
         />
 
-<Stack.Screen
+        <Stack.Screen
           name="EditDishScreen"
           component={EditDishScreen}
           options={{
@@ -190,7 +203,84 @@ const MainNavigator = () => {
             headerTintColor: 'black',
           }}
         />
-       
+        <Stack.Screen
+          name="OrderDetailsScreen"
+          component={OrderDetailsScreen}
+          options={{
+            headerShown: true,
+            headerTitle: 'Chi tiết đơn hàng',
+            useNativeDriver: true,
+            gestureEnabled: true,
+            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+            headerStyle: {
+              backgroundColor: '#fff',
+            },
+            headerTintColor: 'black',
+          }}
+        />
+        <Stack.Screen
+          name="HistoryOrders"
+          component={HistoryOrders}
+          options={{
+            headerShown: true,
+            headerTitle: 'Lịch sử đơn hàng',
+            useNativeDriver: true,
+            gestureEnabled: true,
+            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+            headerStyle: {
+              backgroundColor: '#fff',
+            },
+            headerTintColor: 'black',
+          }}
+        />
+
+        <Stack.Screen
+          name="Profile"
+          component={ProfileScreen}
+          options={{
+            headerShown: true,
+            headerTitle: 'Lịch sử đơn hàng',
+            useNativeDriver: true,
+            gestureEnabled: true,
+            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+            headerStyle: {
+              backgroundColor: '#fff',
+            },
+            headerTintColor: 'black',
+          }}
+        />
+
+        <Stack.Screen
+          name="addUser"
+          component={AddUserScreen}
+          options={{
+            headerShown: true,
+            headerTitle: 'Thêm người dùng mới',
+            useNativeDriver: true,
+            gestureEnabled: true,
+            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+            headerStyle: {
+              backgroundColor: '#fff',
+            },
+            headerTintColor: 'black',
+          }}
+        />
+
+        <Stack.Screen
+          name="EditUserScreen"
+          component={EditUserScreen}
+          options={{
+            headerShown: true,
+            headerTitle: 'Chỉnh sửa thông tin người dùng',
+            useNativeDriver: true,
+            gestureEnabled: true,
+            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+            headerStyle: {
+              backgroundColor: '#fff',
+            },
+            headerTintColor: 'black',
+          }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
