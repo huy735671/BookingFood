@@ -23,6 +23,7 @@ import ProfileScreen from '../component/Profile/ProfileScreen';
 import MenuNavigator from './MenuNavigator';
 import AddUserScreen from '../Admin/component/Manage/AddUserScreen';
 import EditUserScreen from '../Admin/component/Manage/EditUserScreen';
+import SearchResults from '../component/SearchResults';
 
 const Stack = createStackNavigator();
 
@@ -281,7 +282,21 @@ const MainNavigator = () => {
             headerTintColor: 'black',
           }}
         />
-        
+        <Stack.Screen
+          name="SearchResults"
+          component={SearchResults}
+          options={{
+            headerShown: true,
+            headerTitle: 'Tìm kiếm',
+            useNativeDriver: true,
+            gestureEnabled: true,
+            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+            headerStyle: {
+              backgroundColor: '#fff',
+            },
+            headerTintColor: 'black',
+          }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

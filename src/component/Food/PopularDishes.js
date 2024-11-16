@@ -1,9 +1,9 @@
-import { useNavigation } from '@react-navigation/native';
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native';
+import {useNavigation} from '@react-navigation/native';
+import React, {useState, useEffect} from 'react';
+import {StyleSheet, Text, View, Image, TouchableOpacity} from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 
-const PopularDishes = ({ dishes }) => {
+const PopularDishes = ({dishes}) => {
   const [dishesWithStore, setDishesWithStore] = useState([]);
   const [pressedIndex, setPressedIndex] = useState(null);
   const navigation = useNavigation();
@@ -12,27 +12,32 @@ const PopularDishes = ({ dishes }) => {
     const fetchStoreNames = async () => {
       try {
         const updatedDishes = await Promise.all(
-          dishes.map(async (dish) => {
-            const userDoc = await firestore().collection('users').doc(dish.ownerEmail).get();
-            const storeName = userDoc.exists && userDoc.data().storeName ? userDoc.data().storeName : 'Đang cập nhật';
-            return { ...dish, store: storeName };
-          })
+          dishes.map(async dish => {
+            const userDoc = await firestore()
+              .collection('users')
+              .doc(dish.ownerEmail)
+              .get();
+            const storeName =
+              userDoc.exists && userDoc.data().storeName
+                ? userDoc.data().storeName
+                : 'Đang cập nhật';
+            return {...dish, store: storeName};
+          }),
         );
         setDishesWithStore(updatedDishes);
       } catch (error) {
         console.error('Error fetching store names:', error);
       }
     };
-  
+
     fetchStoreNames();
   }, [dishes]);
-  
 
-  const handlePress = (dish) => {
-    navigation.navigate('MenuDish', { selectedDish: dish });
+  const handlePress = dish => {
+    navigation.navigate('MenuDish', {selectedDish: dish});
   };
 
-  const formatPrice = (price) => {
+  const formatPrice = price => {
     if (!price) return '';
     return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   };
@@ -48,9 +53,8 @@ const PopularDishes = ({ dishes }) => {
           ]}
           onPressIn={() => setPressedIndex(index)}
           onPressOut={() => setPressedIndex(null)}
-          onPress={() => handlePress(dish)}
-        >
-          <Image source={{ uri: dish.image }} style={styles.dishImage} />
+          onPress={() => handlePress(dish)}>
+          <Image source={{uri: dish.image}} style={styles.dishImage} />
           <View style={styles.dishInfo}>
             <Text style={styles.dishName}>{dish.dishName}</Text>
             <Text style={styles.dishPrice}>{formatPrice(dish.price)}đ</Text>
@@ -67,6 +71,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    marginBottom: 20,
   },
   dishCard: {
     width: '48%',
@@ -74,14 +79,14 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     marginBottom: 15,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.2,
     shadowRadius: 6,
     elevation: 4,
     padding: 10,
   },
   pressedCard: {
-    transform: [{ scale: 0.95 }],
+    transform: [{scale: 0.95}],
     shadowOpacity: 0.1,
   },
   dishImage: {

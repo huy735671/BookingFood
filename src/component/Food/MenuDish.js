@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   StatusBar,
+  TextInput,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { colors, sizes } from '../../constants/theme';
@@ -19,6 +20,8 @@ const MenuDish = ({ route }) => {
   const [otherDishes, setOtherDishes] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     if (selectedDish?.ownerEmail) {
@@ -63,6 +66,18 @@ const MenuDish = ({ route }) => {
     return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   };
 
+  const handleSearchChange = (text) => {
+    setSearchTerm(text);
+  };
+
+  const handleSearchToggle = () => {
+    setIsSearchVisible(!isSearchVisible);
+    setSearchTerm(''); 
+  };
+  const filteredDishes = otherDishes.filter(dish =>
+    dish.dishName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <View style={styles.container}>
       <StatusBar
@@ -87,11 +102,22 @@ const MenuDish = ({ route }) => {
           style={styles.backButton}>
           <Icon name="chevron-left" size={24} color="black" />
         </TouchableOpacity>
-        <Text style={styles.restaurantName}>
-          {limitCharacters(selectedDish.store, 21)}
-        </Text>
 
-        <TouchableOpacity style={styles.searchIcon}>
+        {isSearchVisible ? (
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Tìm món ăn..."
+            value={searchTerm}
+            onChangeText={handleSearchChange}
+            autoFocus
+          />
+        ) : (
+          <Text style={styles.restaurantName}>
+            {limitCharacters(selectedDish.store, 21)}
+          </Text>
+        )}
+
+<TouchableOpacity style={styles.searchIcon} onPress={handleSearchToggle}>
           <Icon name="search" size={24} color="black" />
         </TouchableOpacity>
       </View>
@@ -115,12 +141,11 @@ const MenuDish = ({ route }) => {
         <Text style={styles.loadingText}>Đang tải...</Text>
       ) : (
         <ScrollView style={styles.otherDishesList}>
-          {otherDishes.map((dish, index) => (
+          {filteredDishes.map((dish, index) => (
             <TouchableOpacity
               key={index}
               style={styles.dishItem}
-              onPress={() => handlePress(dish)} 
-            >
+              onPress={() => handlePress(dish)} >
               <Image source={{ uri: dish.image }} style={styles.dishImage} />
               <View style={styles.dishDetails}>
                 <Text style={styles.dishName}>{dish.dishName}</Text>
@@ -133,7 +158,6 @@ const MenuDish = ({ route }) => {
           ))}
         </ScrollView>
       )}
-
     </View>
   );
 };
@@ -170,6 +194,17 @@ const styles = StyleSheet.create({
     padding: 10,
     position: 'absolute',
     zIndex: 1,
+  },
+  searchInput: {
+    fontSize: 16,
+    flex: 1,
+    padding:12,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: 10,
+    marginLeft: 10,
+    paddingLeft:30,
   },
   restaurantName: {
     fontSize: sizes.h2,
