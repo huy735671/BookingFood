@@ -281,6 +281,7 @@ const MainNavigator = () => {
             headerTintColor: 'black',
           }}
         />
+        
       </Stack.Navigator>
     </NavigationContainer>
   );

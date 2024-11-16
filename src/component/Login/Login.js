@@ -22,7 +22,7 @@ import firestore from '@react-native-firebase/firestore';
 const WINDOW_WIDTH = Dimensions.get('window').width;
 
 const Login = () => {
-  const [email, setEmail] = useState('huyfood@gmail.com');
+  const [email, setEmail] = useState('huycustomer@gmail.com');
   const [password, setPassword] = useState('123456Huy');
   const [errorMessage, setErrorMessage] = useState('');
   const [pwdHidden, setPwdHidden] = useState(true);

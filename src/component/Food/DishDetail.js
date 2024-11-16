@@ -45,7 +45,7 @@ const DishDetail = ({route, navigation}) => {
           .get();
 
         const options = optionsSnapshot.docs.map(doc => doc.data().option);
-        setoptions(options || []); 
+        setoptions(options || []);
       } catch (error) {
         console.error('Error fetching dish options:', error);
         setoptions([]);

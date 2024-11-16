@@ -17,6 +17,7 @@ import firestore from '@react-native-firebase/firestore';
 const MenuDish = ({ route }) => {
   const { selectedDish } = route.params || {};
   const [otherDishes, setOtherDishes] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -28,18 +29,25 @@ const MenuDish = ({ route }) => {
             .where('ownerEmail', '==', selectedDish.ownerEmail)
             .get();
   
-          const dishesList = snapshot.docs.map(doc => doc.data());
-          
+          const dishesList = snapshot.docs.map(doc => ({
+            id: doc.id, // Lấy id của tài liệu
+            ...doc.data(),
+          }));
           const filteredDishes = dishesList.filter(dish => dish.dishName !== selectedDish.dishName);
           setOtherDishes(filteredDishes);
         } catch (error) {
           console.error('Error fetching dishes: ', error);
+        } finally {
+          setLoading(false); // Cập nhật trạng thái loading ở đây
         }
       };
   
       fetchOtherDishes();
+    } else {
+      console.error('No ownerEmail found for selectedDish.');
     }
   }, [selectedDish]);
+  
   
 
   const handlePress = (dish) => {
@@ -103,23 +111,29 @@ const MenuDish = ({ route }) => {
 
       <Text style={styles.titleText}>Các món khác</Text>
 
-      <ScrollView style={styles.otherDishesList}>
-        {otherDishes.map((dish, index) => (
-          <TouchableOpacity
-            key={index}
-            style={styles.dishItem}
-            onPress={() => handlePress(selectedDish)}>
-            <Image source={{ uri: dish.image }} style={styles.dishImage} />
-            <View style={styles.dishDetails}>
-              <Text style={styles.dishName}>{dish.dishName}</Text>
-              <Text style={styles.dishPrice}>{formatPrice(dish.price)}</Text>
-            </View>
-            <TouchableOpacity style={styles.cartIcon}>
-              <Icon name="plus" size={20} color="black" />
+      {loading ? (
+        <Text style={styles.loadingText}>Đang tải...</Text>
+      ) : (
+        <ScrollView style={styles.otherDishesList}>
+          {otherDishes.map((dish, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.dishItem}
+              onPress={() => handlePress(dish)} 
+            >
+              <Image source={{ uri: dish.image }} style={styles.dishImage} />
+              <View style={styles.dishDetails}>
+                <Text style={styles.dishName}>{dish.dishName}</Text>
+                <Text style={styles.dishPrice}>{formatPrice(dish.price)}</Text>
+              </View>
+              <TouchableOpacity style={styles.cartIcon}>
+                <Icon name="plus" size={20} color="black" />
+              </TouchableOpacity>
             </TouchableOpacity>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+          ))}
+        </ScrollView>
+      )}
+
     </View>
   );
 };
@@ -215,6 +229,11 @@ const styles = StyleSheet.create({
   },
   otherDishesList: {
     marginTop: 20,
+  },
+  loadingText: {
+    fontSize: 18,
+    color: colors.primary,
+    textAlign: 'center',
   },
 });
 

@@ -8,8 +8,11 @@ import {
   FlatList,
   Alert,
   Modal,
+  Image,
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
+import storage from '@react-native-firebase/storage'; // Import Firebase Storage
+import {launchImageLibrary} from 'react-native-image-picker'; // Import image picker
 import Icon from '../../../../component/Icon';
 import {colors, sizes} from '../../../../constants/theme';
 
@@ -18,11 +21,11 @@ const CategoryManagementScreen = () => {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [categoryToEdit, setCategoryToEdit] = useState(null);
+  const [categoryImage, setCategoryImage] = useState(null); // State to store the image
 
-  // Lấy danh sách danh mục từ Firestore (collection categoriesHome)
   useEffect(() => {
     const unsubscribe = firestore()
-      .collection('categoriesHome')  // Cập nhật collection ở đây
+      .collection('categoriesHome')
       .onSnapshot(snapshot => {
         const categoriesList = snapshot.docs.map(doc => ({
           id: doc.id,
@@ -35,19 +38,31 @@ const CategoryManagementScreen = () => {
   }, []);
 
   // Thêm danh mục mới
-  const handleAddCategory = () => {
+  const handleAddCategory = async () => {
     if (newCategoryName.trim() === '') {
       Alert.alert('Lỗi', 'Tên danh mục không thể để trống');
       return;
     }
 
+    let imageUrl = null;
+    if (categoryImage) {
+      // Upload ảnh lên Firebase Storage
+      const imageRef = storage().ref(`categories/${categoryImage.fileName}`);
+      await imageRef.putFile(categoryImage.uri);
+      imageUrl = await imageRef.getDownloadURL(); // Lấy URL ảnh sau khi upload
+    }
+
+    const categoryData = {
+      name: newCategoryName,
+      image: imageUrl, // Save the image URL if available
+    };
+
     firestore()
-      .collection('categoriesHome')  // Cập nhật collection ở đây
-      .add({
-        name: newCategoryName,
-      })
+      .collection('categoriesHome')
+      .add(categoryData)
       .then(() => {
         setNewCategoryName('');
+        setCategoryImage(null); // Clear image after adding
         Alert.alert('Thành công', 'Danh mục đã được thêm');
       })
       .catch(error => {
@@ -57,18 +72,29 @@ const CategoryManagementScreen = () => {
   };
 
   // Cập nhật danh mục
-  const handleUpdateCategory = () => {
+  const handleUpdateCategory = async () => {
     if (categoryToEdit && categoryToEdit.name.trim() === '') {
       Alert.alert('Lỗi', 'Tên danh mục không thể để trống');
       return;
     }
 
+    let imageUrl = categoryToEdit.image;
+    if (categoryImage) {
+      // Upload ảnh lên Firebase Storage nếu có ảnh mới
+      const imageRef = storage().ref(`categories/${categoryImage.fileName}`);
+      await imageRef.putFile(categoryImage.uri);
+      imageUrl = await imageRef.getDownloadURL(); // Lấy URL ảnh mới
+    }
+
+    const updatedCategory = {
+      name: categoryToEdit.name,
+      image: imageUrl, // Save the updated image URL
+    };
+
     firestore()
-      .collection('categoriesHome')  // Cập nhật collection ở đây
+      .collection('categoriesHome')
       .doc(categoryToEdit.id)
-      .update({
-        name: categoryToEdit.name,
-      })
+      .update(updatedCategory)
       .then(() => {
         setIsModalVisible(false);
         Alert.alert('Thành công', 'Danh mục đã được cập nhật');
@@ -79,10 +105,21 @@ const CategoryManagementScreen = () => {
       });
   };
 
+  // Chọn hình ảnh từ thư viện
+  const handleSelectImage = () => {
+    launchImageLibrary({mediaType: 'photo'}, response => {
+      if (response.assets) {
+        setCategoryImage(response.assets[0]);
+      } else {
+        Alert.alert('Lỗi', 'Không chọn được hình ảnh');
+      }
+    });
+  };
+
   // Xóa danh mục
   const handleDeleteCategory = id => {
     firestore()
-      .collection('categoriesHome')  // Cập nhật collection ở đây
+      .collection('categoriesHome')
       .doc(id)
       .delete()
       .then(() => {
@@ -120,6 +157,7 @@ const CategoryManagementScreen = () => {
                 style={styles.actionButton}
                 onPress={() => {
                   setCategoryToEdit(item);
+                  setCategoryImage(item.image ? {uri: item.image} : null); // Load image when editing
                   setIsModalVisible(true);
                 }}>
                 <Icon icon="edit" size={24} color={colors.primary} />
@@ -152,16 +190,38 @@ const CategoryManagementScreen = () => {
               }
               placeholder="Nhập tên danh mục"
             />
+
+            {/* Hiển thị ảnh đã chọn hoặc ảnh cũ */}
+            {categoryToEdit && categoryToEdit.image ? (
+              <View style={styles.imageContainer}>
+                <Text>Hình ảnh hiện tại:</Text>
+                <Image
+                  source={{uri: categoryToEdit.image}}
+                  style={styles.imagePreview}
+                />
+              </View>
+            ) : null}
+
             <TouchableOpacity
-              style={styles.modalSaveButton}
-              onPress={handleUpdateCategory}>
-              <Text style={styles.modalSaveButtonText}>Lưu</Text>
+              onPress={handleSelectImage}
+              style={styles.imageButton}>
+              <Text style={styles.modalImageButton}>
+                {categoryImage ? 'Thay đổi hình ảnh' : 'Chọn hình ảnh'}
+              </Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.modalCancelButton}
-              onPress={() => setIsModalVisible(false)}>
-              <Text style={styles.modalCancelButtonText}>Hủy</Text>
-            </TouchableOpacity>
+
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={styles.modalSaveButton}
+                onPress={handleUpdateCategory}>
+                <Text style={styles.modalSaveButtonText}>Lưu</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => setIsModalVisible(false)}>
+                <Text style={styles.modalCancelButtonText}>Hủy</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -228,53 +288,76 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    width: 300,
     backgroundColor: 'white',
     padding: 20,
+    width: '80%',
     borderRadius: 10,
-    alignItems: 'center',
   },
   modalTitle: {
     fontSize: sizes.h3,
+    marginBottom: 10,
     fontWeight: 'bold',
-    marginBottom: 15,
-    color: colors.primary,
   },
   modalInput: {
     height: 50,
-    borderColor: '#ddd',
+    borderColor: 'gray',
     borderWidth: 1,
+    marginBottom: 10,
+    borderRadius: 5,
     paddingLeft: 10,
-    borderRadius: 10,
-    marginBottom: 20,
-    width: '100%',
+    borderColor: '#ddd',
+  },
+  modalImageButton: {
+    color: colors.light,
+    fontSize: sizes.h4,
+    fontWeight:'bold',
+  },
+  imageButton: {
+    alignItems: 'center',
+    borderWidth: 1,
+    marginBottom: 5,
+    borderRadius: 5,
+    padding: 10,
+    backgroundColor:colors.lightGray,
+    borderColor: '#ddd',
+  },
+  buttonContainer: {
+    flexDirection: 'row-reverse',
+    justifyContent: 'space-between',
   },
   modalSaveButton: {
     backgroundColor: colors.green,
-    paddingVertical: 12,
+    padding: 10,
     borderRadius: 5,
-    justifyContent: 'center',
     alignItems: 'center',
-    width: '100%',
-    marginBottom: 10,
+    width: '45%',
   },
   modalSaveButtonText: {
     color: 'white',
+    fontSize: sizes.h4,
     fontWeight: 'bold',
-    fontSize: sizes.h3,
   },
   modalCancelButton: {
-    backgroundColor: colors.red,
-    paddingVertical: 12,
+    padding: 10,
+    backgroundColor: '#ddd',
     borderRadius: 5,
-    justifyContent: 'center',
     alignItems: 'center',
-    width: '100%',
+    width: '45%',
   },
   modalCancelButtonText: {
-    color: 'white',
+    color: 'black',
+    fontSize: sizes.h4,
     fontWeight: 'bold',
-    fontSize: sizes.h3,
+  },
+  imageContainer: {
+    marginBottom: 15,
+    alignItems: 'center',
+  },
+  imagePreview: {
+    width: 200,
+    height: 100,
+    borderRadius: 10,
+    marginTop: 10,
   },
 });
 

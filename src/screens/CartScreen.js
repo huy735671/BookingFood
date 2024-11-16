@@ -92,12 +92,76 @@ const CartScreen = () => {
 
   // Call fetchCartItems again when the screen loads or when "Cập nhật" button is pressed
   useEffect(() => {
-    fetchCartItems();
+    const user = auth().currentUser;
+    if (user) {
+      const userEmail = user.email;
+  
+      const unsubscribe = firestore()
+        .collection('cart')
+        .where('email', '==', userEmail)
+        .onSnapshot(async snapshot => {
+          const cartItems = snapshot.docs.map(doc => ({
+            ...doc.data(),
+            id: doc.id,
+          }));
+  
+          const updatedItems = cartItems.map(item => ({
+            ...item,
+            quantity: 1,
+          }));
+  
+          const groupedItems = updatedItems.reduce((acc, item) => {
+            const key = `${item.dishId}-${item.email}`;
+            if (!acc[key]) {
+              acc[key] = { ...item, quantity: 1 };
+            } else {
+              acc[key].quantity += 1;
+            }
+            return acc;
+          }, {});
+  
+          const finalItems = await Promise.all(
+            Object.values(groupedItems).map(async item => {
+              const dishSnapshot = await firestore()
+                .collection('dishes')
+                .doc(item.dishId)
+                .get();
+  
+              if (dishSnapshot.exists) {
+                const dishData = dishSnapshot.data();
+  
+                const userSnapshot = await firestore()
+                  .collection('users')
+                  .where('email', '==', dishData.ownerEmail)
+                  .get();
+  
+                let storeName = 'Đang cập nhật';
+                if (!userSnapshot.empty) {
+                  storeName = userSnapshot.docs[0].data().storeName || 'Đang cập nhật';
+                }
+  
+                return {
+                  ...item,
+                  dishDetails: dishData,
+                  storeName,
+                };
+              }
+              return item;
+            })
+          );
+  
+          setItems(finalItems);
+          setLoading(false);
+        });
+  
+      return () => unsubscribe(); 
+    }
   }, []);
+  
 
   const handleRefresh = () => {
-    setLoading(true); // Set loading to true before fetching new data
-    fetchCartItems(); // Re-fetch the cart items
+    setLoading(true);
+    fetchCartItems(); 
   };
 
   const toggleSelectItem = id => {

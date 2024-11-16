@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -9,20 +9,20 @@ import {
   ScrollView,
   Image,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { colors } from '../../../constants/theme';
+import {useNavigation} from '@react-navigation/native';
+import {colors} from '../../../constants/theme';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import CheckBox from '@react-native-community/checkbox';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { launchImageLibrary } from 'react-native-image-picker';  
+import {launchImageLibrary} from 'react-native-image-picker';
 import storage from '@react-native-firebase/storage';
-
 
 const AddDishScreen = () => {
   const [dishName, setDishName] = useState('');
   const [description, setDescription] = useState('');
   const [categories, setCategories] = useState([]);
+  const [categoriesHome, setCategoriesHome] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [price, setPrice] = useState('');
   const [image, setImage] = useState(null);
@@ -35,6 +35,7 @@ const AddDishScreen = () => {
     const fetchCategories = async () => {
       const userEmail = auth().currentUser.email;
 
+      // Lấy dữ liệu từ collection `categories`
       const categoriesSnapshot = await firestore()
         .collection('categories')
         .where('ownerEmail', '==', userEmail)
@@ -46,6 +47,18 @@ const AddDishScreen = () => {
       }));
 
       setCategories(categoriesList);
+
+      // Lấy dữ liệu từ collection `categoriesHome`
+      const categoriesHomeSnapshot = await firestore()
+        .collection('categoriesHome')
+        .get();
+
+      const categoriesHomeList = categoriesHomeSnapshot.docs.map(doc => ({
+        id: doc.id,
+        name: doc.data().name,
+      }));
+
+      setCategoriesHome(categoriesHomeList);
     };
 
     fetchCategories();
@@ -60,22 +73,55 @@ const AddDishScreen = () => {
       }
     });
   };
+  const [selectedCategoriesHome, setSelectedCategoriesHome] = useState([]);
+
+const handleHomeCategoryChange = categoryId => {
+  setSelectedCategoriesHome(prevSelectedCategories => {
+    if (prevSelectedCategories.includes(categoryId)) {
+      return prevSelectedCategories.filter(id => id !== categoryId);
+    } else {
+      return [...prevSelectedCategories, categoryId];
+    }
+  });
+};
+
+const renderCategoriesHome = () => {
+  const rows = [];
+  for (let i = 0; i < categoriesHome.length; i += 2) {
+    const rowCategories = categoriesHome.slice(i, i + 2);
+    rows.push(
+      <View key={`home-row-${i}`} style={styles.row}>
+        {rowCategories.map(category => (
+          <View key={category.id} style={styles.categoryContainer}>
+            <CheckBox
+              value={selectedCategoriesHome.includes(category.id)}
+              onValueChange={() => handleHomeCategoryChange(category.id)}
+            />
+            <Text>{category.name}</Text>
+          </View>
+        ))}
+      </View>
+    );
+  }
+  return rows;
+};
+
 
   const handleImagePick = () => {
-    launchImageLibrary({ mediaType: 'photo', quality: 1 }, async response => {
+    launchImageLibrary({mediaType: 'photo', quality: 1}, async response => {
       if (!response.didCancel && !response.errorCode) {
         const selectedImage = response.assets[0];
         const imageUri = selectedImage.uri;
-  
+
         try {
           const imageName = `${Date.now()}.jpg`;
-  
+
           const reference = storage().ref(imageName);
-          await reference.putFile(imageUri);  
-  
+          await reference.putFile(imageUri);
+
           const imageUrl = await reference.getDownloadURL();
-  
-          setImage(imageUrl); 
+
+          setImage(imageUrl);
         } catch (error) {
           console.error('Lỗi khi tải lên hình ảnh:', error);
         }
@@ -93,7 +139,8 @@ const AddDishScreen = () => {
     const newDish = {
       dishName,
       description,
-      categories: selectedCategories,
+      categories: selectedCategories,  // danh mục từ categories
+      categoriesHome: selectedCategoriesHome,  // danh mục từ categoriesHome
       price,
       image,
       isAvailable,
@@ -111,7 +158,7 @@ const AddDishScreen = () => {
   
       const batch = firestore().batch();
       additionalOptionsData.forEach(optionData => {
-        const optionRef = firestore().collection('options').doc(); 
+        const optionRef = firestore().collection('options').doc();
         batch.set(optionRef, optionData);
       });
   
@@ -123,8 +170,6 @@ const AddDishScreen = () => {
       console.error('Lỗi khi thêm món ăn và tùy chọn bổ sung:', error);
     }
   };
-  
-  
   
 
   const renderCategoryRows = () => {
@@ -142,7 +187,7 @@ const AddDishScreen = () => {
               <Text>{category.name}</Text>
             </View>
           ))}
-        </View>
+        </View>,
       );
     }
     return rows;
@@ -176,6 +221,11 @@ const AddDishScreen = () => {
       </View>
 
       <View style={styles.inputContainer}>
+        <Text style={styles.label}>Danh mục từ categoriesHome</Text>
+        {renderCategoriesHome()}
+      </View>
+
+      <View style={styles.inputContainer}>
         <Text style={styles.label}>Giá (VNĐ)</Text>
         <TextInput
           style={styles.input}
@@ -190,7 +240,7 @@ const AddDishScreen = () => {
         <Text style={styles.label}>Hình ảnh món ăn</Text>
         <TouchableOpacity onPress={handleImagePick} style={styles.imageBox}>
           {image ? (
-            <Image source={{ uri: image }} style={styles.image} />
+            <Image source={{uri: image}} style={styles.image} />
           ) : (
             <Text style={styles.buttonText}>Thêm ảnh</Text>
           )}
@@ -205,7 +255,9 @@ const AddDishScreen = () => {
       <View style={styles.inputContainer}>
         <View style={styles.row}>
           <Text style={styles.label}>Tùy chọn bổ sung</Text>
-          <TouchableOpacity onPress={handleAddOption} style={styles.addOptionButton}>
+          <TouchableOpacity
+            onPress={handleAddOption}
+            style={styles.addOptionButton}>
             <Icon name="add" size={30} color={colors.primary} />
           </TouchableOpacity>
         </View>
@@ -224,10 +276,11 @@ const AddDishScreen = () => {
             <TouchableOpacity
               style={styles.deleteButton}
               onPress={() => {
-                const updatedOptions = additionalOptions.filter((_, i) => i !== index);
+                const updatedOptions = additionalOptions.filter(
+                  (_, i) => i !== index,
+                );
                 setAdditionalOptions(updatedOptions);
-              }}
-            >
+              }}>
               <Icon name="delete" size={30} color="red" />
             </TouchableOpacity>
           </View>
@@ -249,7 +302,6 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     marginBottom: 15,
-    
   },
   inputContainer2: {
     marginVertical: 15,
@@ -278,19 +330,22 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems:'center',
-    marginBottom:5,
+    marginBottom: 10,
+  },
+  categoryContainer: {
+    width: '48%', 
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderColor: '#ccc',
+    borderRadius: 5,
   },
   imageBox: {
     marginTop: 10,
-    borderWidth: 1,
     borderColor: '#ddd',
     padding: 10,
-    borderRadius:5,
     alignItems: 'center',
     justifyContent: 'center',
     height: 150,
-
   },
   image: {
     width: 250,
@@ -318,9 +373,8 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 10,
   },
-  buttonAddText:{
-    color:colors.light,
-
+  buttonAddText: {
+    color: colors.light,
   },
   optionContainer: {
     flexDirection: 'row',

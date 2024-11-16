@@ -58,8 +58,8 @@ const OrderDetails = () => {
   const handlePlaceOrder = async () => {
     try {
       const currentUser = auth().currentUser;
-      const userEmail = currentUser?.email; 
-  
+      const userEmail = currentUser?.email;
+
       const orderData = {
         items: items.map(item => ({
           dishName: item.dishName,
@@ -68,7 +68,7 @@ const OrderDetails = () => {
           storeName: item.storeName,
           ownerEmail: item.dishDetails?.ownerEmail,
           selectedOptions: item.selectedOptions,
-          status:'pending' ,
+          status: 'pending',
         })),
         totalAmount,
         shippingFee,
@@ -79,13 +79,13 @@ const OrderDetails = () => {
         customerEmail: userEmail,
         customerAddress: userAddress,
       };
-  
+
       await firestore().collection('orders').add(orderData);
-  
+
       await Promise.all(
-        items.map(item => firestore().collection('cart').doc(item.id).delete())
+        items.map(item => firestore().collection('cart').doc(item.id).delete()),
       );
-  
+
       navigation.navigate('PaymentSuccess', {
         items: items.map(item => ({
           ...item,
@@ -101,7 +101,6 @@ const OrderDetails = () => {
       console.error('Error placing order:', error);
     }
   };
-  
 
   useEffect(() => {
     const fetchUserAddress = async () => {
@@ -148,9 +147,18 @@ const OrderDetails = () => {
                 <View
                   key={`item-${item.id || itemIndex}-${storeName}`}
                   style={styles.itemRow}>
-                  <Text style={styles.itemName}>
-                    {item.quantity}x {item.dishName}
-                  </Text>
+                  <View style={styles.itemTextContainer}>
+                    <Text style={styles.itemName}>
+                      {item.quantity}x {item.dishName}
+                    </Text>
+                    {item.selectedOptions &&
+                      item.selectedOptions.length > 0 && (
+                        <Text style={styles.selectedOptionsText}>
+                          {item.selectedOptions.join(', ').slice(0, 40)}
+                          {item.selectedOptions.join(', ').length > 40 && '...'}
+                        </Text>
+                      )}
+                  </View>
                   <Text style={styles.itemPrice}>
                     {item.dishDetails?.price
                       ? formatCurrency(item.dishDetails.price * item.quantity)
@@ -286,9 +294,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 5,
   },
+  itemTextContainer: {
+    flexDirection: 'column',
+  },
   itemName: {
     fontSize: sizes.h3,
     color: colors.primary,
+  },
+  selectedOptions: {
+    fontSize: sizes.h4,
+    color: colors.secondary,
+    marginTop: 5,
+  },
+  selectedOptionsText: {
+    fontSize: 12,
+    color: colors.secondary,
+    marginTop: 5,
   },
   itemPrice: {
     fontSize: 16,
