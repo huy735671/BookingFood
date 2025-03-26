@@ -78,7 +78,8 @@ const handleGiftExchange = async (gift, userEmail, userPoints, onClose) => {
       email: userEmail,
       exchangeDate: firestore.FieldValue.serverTimestamp(),
       giftName: gift.name,
-      giftPoints: gift.points
+      giftPoints: gift.points,
+      category:gift.category,
     });
 
     if (gift.stock) {
@@ -177,7 +178,7 @@ const GiftDetailModal = ({visible, onClose, gift, userPoints, userEmail}) => {
               <View style={[styles.notice, {backgroundColor: '#ffdddd'}]}>
                 <Icon icon="close" size={20} color={colors.red} />
                 <Text style={[styles.noticeText, {color: '#a00'}]}>
-                  Bạn cần thêm {gift.points - userPoints} điểm để đổi quà này
+                Bạn cần thêm {gift.points - userPoints} điểm để đổi quà này
                 </Text>
               </View>
             )}
@@ -283,7 +284,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     marginVertical: 10,
-    width: '100%',
+    width: '105%',
     alignItems: 'center',
   },
   noticeText: {

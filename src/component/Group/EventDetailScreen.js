@@ -14,6 +14,7 @@ import auth from '@react-native-firebase/auth';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import Icon from '../Icon';
 import {colors, sizes} from '../../constants/theme';
+import MemberListModal from './GroupTab/EventDetail/MemberListModal';
 
 const EventDetailScreen = () => {
   const route = useRoute();
@@ -28,8 +29,7 @@ const EventDetailScreen = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [hasCompleted, setHasCompleted] = useState(false);
   const [requests, setRequests] = useState([]);
-
-
+  const [showMemberModal, setShowMemberModal] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -116,16 +116,20 @@ const EventDetailScreen = () => {
     setIsModalVisible(true);
   };
 
+  const handleShowMembers = () => {
+    setShowMemberModal(true);
+  };
+
   const handleConfirmCompletion = async () => {
     if (!event || !userId) return;
-  
+
     try {
       const eventRef = firestore().collection('EVENTS_GROUPS').doc(eventId);
       const userCompletionRef = firestore()
         .collection('LIST_EVENT_COMPLETE')
         .where('eventId', '==', eventId)
         .where('userId', '==', userId);
-  
+
       // Kiểm tra nếu người dùng đã hoàn thành trước đó
       const existingCompletion = await userCompletionRef.get();
       if (!existingCompletion.empty) {
@@ -133,25 +137,27 @@ const EventDetailScreen = () => {
         setIsModalVisible(false);
         return;
       }
-  
+
       const eventDoc = await eventRef.get();
       if (!eventDoc.exists) return;
       const eventData = eventDoc.data();
-  
+
       // Kiểm tra mã xác nhận
       if (completionText !== eventData.confirmationCode) {
         alert('Mã xác nhận không chính xác!');
         return;
       }
-  
+
       // Lấy groupId nếu sự kiện có liên kết nhóm
       const groupId = eventData.groupId || 'no-group'; // Nếu không có groupId thì đặt giá trị mặc định
-  
+
       // Tạo document ID duy nhất theo userId và groupId
       const pointDocId = `${userId}_${groupId}`;
-      const pointRef = firestore().collection('POINT_EVENT_GROUPS').doc(pointDocId);
+      const pointRef = firestore()
+        .collection('POINT_EVENT_GROUPS')
+        .doc(pointDocId);
       const pointDoc = await pointRef.get();
-  
+
       if (pointDoc.exists) {
         // Nếu cùng groupId thì cập nhật điểm
         await pointRef.update({
@@ -165,7 +171,7 @@ const EventDetailScreen = () => {
           totalPoints: 1,
         });
       }
-  
+
       // Thêm vào danh sách hoàn thành `LIST_EVENT_COMPLETE`
       await firestore().collection('LIST_EVENT_COMPLETE').add({
         userId,
@@ -173,7 +179,7 @@ const EventDetailScreen = () => {
         groupId,
         createdAt: firestore.FieldValue.serverTimestamp(),
       });
-  
+
       alert('Sự kiện đã được hoàn thành!');
       setIsModalVisible(false);
       setCompletionText('');
@@ -182,9 +188,6 @@ const EventDetailScreen = () => {
       console.error('Lỗi khi hoàn thành sự kiện:', error);
     }
   };
-  
-  
-  
 
   useEffect(() => {
     if (!userId || !eventId) return;
@@ -201,9 +204,6 @@ const EventDetailScreen = () => {
 
     checkCompletion();
   }, [userId, eventId]);
-
-
-  
 
   // Function to check button availability based on the current date and event date
   const getButtonStatus = () => {
@@ -247,10 +247,10 @@ const EventDetailScreen = () => {
             <Icon icon="Location" size={20} color="green" />
             <Text> {event.location}</Text>
           </View>
-          <View style={styles.infoBox}>
+          <TouchableOpacity style={styles.infoBox} onPress={handleShowMembers}>
             <Icon icon="people" size={20} color="green" />
             <Text> {event.members?.length || 0} người</Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
         <Text style={styles.descriptionTitle}>Mô tả</Text>
@@ -330,6 +330,13 @@ const EventDetailScreen = () => {
           </View>
         </View>
       </Modal>
+
+
+      <MemberListModal
+        visible={showMemberModal}
+        onClose={() => setShowMemberModal(false)}
+        memberIds={event.members || []}
+      />
     </View>
   );
 };

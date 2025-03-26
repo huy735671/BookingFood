@@ -13,6 +13,7 @@ import {
 import firestore from '@react-native-firebase/firestore';
 import {colors, sizes} from '../../../constants/theme';
 import GiftDetailModal from './GiftDetailModal';
+import {useNavigation} from '@react-navigation/native';
 
 const categories = [
   {id: 'all', name: 'Tất cả'},
@@ -27,30 +28,34 @@ const GiftScreen = ({route}) => {
   const [loading, setLoading] = useState(true);
   const [gifts, setGifts] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedGift, setSelectedGift] = useState(null); 
+  const [selectedGift, setSelectedGift] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
 
+  const navigation = useNavigation();
   const {userEmail} = route.params;
 
   const fetchUserPoints = async () => {
     try {
       setLoading(true);
-      
+
       const unsubscribe = firestore()
         .collection('USER_POINTS')
         .doc(userEmail)
-        .onSnapshot((doc) => {
-          if (doc.exists) {
-            setUserPoints(doc.data().points || 0);
-          } else {
-            setUserPoints(0);
-          }
-          setLoading(false);
-        }, (error) => {
-          console.error('Lỗi khi lấy điểm người dùng:', error);
-          setLoading(false);
-        });
-  
+        .onSnapshot(
+          doc => {
+            if (doc.exists) {
+              setUserPoints(doc.data().points || 0);
+            } else {
+              setUserPoints(0);
+            }
+            setLoading(false);
+          },
+          error => {
+            console.error('Lỗi khi lấy điểm người dùng:', error);
+            setLoading(false);
+          },
+        );
+
       return unsubscribe;
     } catch (error) {
       console.error('Lỗi khi thiết lập lắng nghe điểm:', error);
@@ -92,7 +97,11 @@ const GiftScreen = ({route}) => {
             <Text style={styles.title}>Điểm hiện có</Text>
             <Text style={styles.pointsText}>{userPoints}</Text>
           </View>
-          <TouchableOpacity style={styles.historyButton}>
+          <TouchableOpacity
+            style={styles.historyButton}
+            onPress={() =>
+              navigation.navigate('HistoryScreen', {userEmail, userPoints})
+            }>
             <Text style={styles.historyText}>Lịch sử đổi điểm</Text>
           </TouchableOpacity>
         </View>
@@ -100,7 +109,10 @@ const GiftScreen = ({route}) => {
           <Text style={styles.levelText}>Cấp 3</Text>
           <View style={styles.progressBar}>
             <View
-              style={[styles.progress, {width: `${(userPoints / 10000) * 100}%`}]}
+              style={[
+                styles.progress,
+                {width: `${(userPoints / 10000) * 100}%`},
+              ]}
             />
           </View>
           <Text style={styles.levelText}>Cấp 4</Text>

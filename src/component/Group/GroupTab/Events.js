@@ -7,6 +7,7 @@ import {
   FlatList,
   Image,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
@@ -58,7 +59,6 @@ const Events = ({group}) => {
         },
       );
 
-    // Cleanup subscription on unmount
     return () => unsubscribe();
   }, [group?.id]);
 
@@ -84,30 +84,34 @@ const Events = ({group}) => {
 
   const navigateToEventDetail = (eventId) => {
     navigation.navigate('EventDetailScreen', { eventId });
-};
+  };
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const upcomingEvents = events.filter(event => event.date >= today);
+  const pastEvents = events.filter(event => event.date < today);
 
   const renderEventItem = ({item}) => (
     <TouchableOpacity
       style={styles.eventCard}
       onPress={() => navigateToEventDetail(item.id)}>
       {item.coverImageUrl ? (
-  <Image
-    source={{ uri: item.coverImageUrl || '' }}
-    style={styles.eventImage}
-    resizeMode="cover"
-    onError={() => console.log("Error loading image")}
-  />
-) : (
-  <View style={styles.eventImagePlaceholder}>
-    <Icon
-      icon={item.eventType === 'Dọn dẹp' ? 'trash' : 'people'}
-      size={30}
-      color="#28a745"
-    />
-  </View>
-)}
-
+        <Image
+          source={{ uri: item.coverImageUrl || '' }}
+          style={styles.eventImage}
+          resizeMode="cover"
+          onError={() => console.log("Error loading image")}
+        />
+      ) : (
+        <View style={styles.eventImagePlaceholder}>
+          <Icon
+            icon={item.eventType === 'Dọn dẹp' ? 'trash' : 'people'}
+            size={30}
+            color="#28a745"
+          />
+        </View>
+      )}
 
       <View style={styles.eventContent}>
         <Text style={styles.eventType}>
@@ -178,15 +182,33 @@ const Events = ({group}) => {
           <Text style={styles.loadingText}>Đang tải sự kiện...</Text>
         </View>
       ) : (
-        <FlatList
-          data={events}
-          keyExtractor={item => item.id}
-          renderItem={renderEventItem}
-          ListEmptyComponent={renderEmptyComponent}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={events.length === 0 ? {flex: 1} : {paddingBottom: 20}}
-          scrollEnabled={false}
-        />
+        <ScrollView>
+          {upcomingEvents.length > 0 && (
+            <>
+              <FlatList
+                data={upcomingEvents}
+                keyExtractor={item => item.id}
+                renderItem={renderEventItem}
+                scrollEnabled={false}
+                ListEmptyComponent={renderEmptyComponent}
+              />
+            </>
+          )}
+
+          {pastEvents.length > 0 && (
+            <>
+              <Text style={styles.sectionTitle}>Các sự kiện đã qua</Text>
+              <FlatList
+                data={pastEvents}
+                keyExtractor={item => item.id}
+                renderItem={renderEventItem}
+                scrollEnabled={false}
+              />
+            </>
+          )}
+
+          {upcomingEvents.length === 0 && pastEvents.length === 0 && renderEmptyComponent()}
+        </ScrollView>
       )}
     </View>
   );
@@ -306,6 +328,13 @@ const styles = StyleSheet.create({
   createEmptyButtonText: {
     color: '#fff',
     fontWeight: 'bold',
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#212529',
+    marginTop: 15,
+    marginBottom: 10,
   },
 });
 

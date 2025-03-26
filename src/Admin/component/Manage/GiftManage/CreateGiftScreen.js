@@ -14,7 +14,7 @@ import {useNavigation} from '@react-navigation/native';
 import {launchImageLibrary} from 'react-native-image-picker';
 import {Picker} from '@react-native-picker/picker';
 import storage from '@react-native-firebase/storage';
-
+import { colors } from '../../../../constants/theme';
 
 const CreateGiftScreen = () => {
   const [giftName, setGiftName] = useState('');
@@ -26,6 +26,17 @@ const CreateGiftScreen = () => {
   const [image, setImage] = useState(null);
   const [deliveryTime, setDeliveryTime] = useState('');
   const [expirationDate, setExpirationDate] = useState('');
+  const [randomCode, setRandomCode] = useState('');
+
+  // Function to generate a random code
+  const generateRandomCode = () => {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = 'ECO'; // First 3 characters always 'ECO'
+    for (let i = 3; i < 10; i++) {
+      result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return result;
+  };
 
   const pickImage = () => {
     launchImageLibrary({mediaType: 'photo', quality: 1}, response => {
@@ -57,15 +68,21 @@ const CreateGiftScreen = () => {
     }
   
     try {
+      // Generate random code for Voucher and Trải nghiệm categories
+      const code = ['Voucher', 'Trải nghiệm'].includes(giftCategory) 
+        ? generateRandomCode() 
+        : null;
+
       await firestore().collection('GIFTS').add({
         name: giftName,
         description: giftDescription,
         points: parseInt(giftPoints),
         category: giftCategory,
         quantity: giftQuantity ? parseInt(giftQuantity) : null,
-        deliveryTime: deliveryTime || null,
-        expirationDate: expirationDate || null,
-        image: imageUrl, // Lưu URL ảnh vào Firestore
+        deliveryTime: giftCategory === 'Quyên góp' ? null : deliveryTime,
+        expirationDate: giftCategory === 'Quyên góp' ? null : expirationDate,
+        randomCode: code,
+        image: imageUrl,
       });
   
       Alert.alert('Thành công', 'Quà tặng đã được thêm.');
@@ -123,7 +140,12 @@ const CreateGiftScreen = () => {
           <View style={styles.pickerContainer}>
             <Picker
               selectedValue={giftCategory}
-              onValueChange={itemValue => setGiftCategory(itemValue)}
+              onValueChange={itemValue => {
+                setGiftCategory(itemValue);
+                // Reset conditional fields when category changes
+                setDeliveryTime('');
+                setExpirationDate('');
+              }}
               style={styles.picker}>
               <Picker.Item label="Sản phẩm eco" value="Sản phẩm eco" />
               <Picker.Item label="Voucher" value="Voucher" />
@@ -144,21 +166,52 @@ const CreateGiftScreen = () => {
         onChangeText={setGiftQuantity}
       />
 
-      <Text style={styles.label}>Thời gian giao hàng</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Ví dụ: từ 3-5 ngày"
-        value={deliveryTime}
-        onChangeText={setDeliveryTime}
-      />
+      {/* Conditional rendering for delivery time */}
+      {giftCategory !== 'Quyên góp' && giftCategory !== 'Voucher' && giftCategory !== 'Trải nghiệm' && (
+        <>
+          <Text style={styles.label}>Thời gian giao hàng</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Ví dụ: từ 3-5 ngày"
+            value={deliveryTime}
+            onChangeText={setDeliveryTime}
+          />
+        </>
+      )}
 
-      <Text style={styles.label}>Hạn sử dụng</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Ví dụ: 30 ngày kể từ ngày đổi"
-        value={expirationDate}
-        onChangeText={setExpirationDate}
-      />
+      {/* Conditional rendering for random code */}
+      {(giftCategory === 'Voucher' || giftCategory === 'Trải nghiệm') && (
+        <View style={styles.randomCodeContainer}>
+          <Text style={styles.label}>Mã ngẫu nhiên</Text>
+          <View style={styles.randomCodeInputContainer}>
+            <TextInput
+              style={styles.randomCodeInput}
+              placeholder="Mã ngẫu nhiên sẽ được tạo"
+              value={randomCode}
+              editable={false}
+            />
+            <TouchableOpacity 
+              style={styles.generateCodeButton} 
+              onPress={() => setRandomCode(generateRandomCode())}
+            >
+              <Text style={styles.generateCodeButtonText}>Tạo mã</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* Conditional rendering for expiration date */}
+      {giftCategory !== 'Quyên góp' && (
+        <>
+          <Text style={styles.label}>Hạn sử dụng</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Ví dụ: 30 ngày kể từ ngày đổi"
+            value={expirationDate}
+            onChangeText={setExpirationDate}
+          />
+        </>
+      )}
 
       <TouchableOpacity style={styles.saveButton} onPress={addGift}>
         <Text style={styles.saveButtonText}>Lưu</Text>
@@ -258,6 +311,46 @@ const styles = StyleSheet.create({
   picker: {
     height: 50,
     width: '100%',
+  },
+  generateCodeButton: {
+    backgroundColor: '#17a2b8',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  generateCodeButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  randomCodeContainer: {
+    marginBottom: 15,
+  },
+  randomCodeInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  randomCodeInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    backgroundColor: '#ffffff',
+    borderRadius: 5,
+    padding: 10,
+    marginRight: 10,
+  },
+  generateCodeButton: {
+    backgroundColor: colors.green,
+    padding: 8,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 70,
+    height:50,
+  },
+  generateCodeButtonText: {
+    color: 'white',
+    fontSize: 12,
   },
 });
 

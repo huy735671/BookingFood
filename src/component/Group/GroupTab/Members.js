@@ -64,7 +64,7 @@ const Members = ({group}) => {
       if (!isCreatorInList) {
         combinedMembers.unshift({
           ...group.createdBy,
-          role: 'Người tạo nhóm', // Gán vai trò riêng cho người tạo
+          role: 'Người tạo nhóm', 
         });
       }
     }

@@ -22,6 +22,7 @@ import EventDetailScreen from '../component/Group/EventDetailScreen';
 import EventDetails from '../component/Food/EvenDetails/EventDetails';
 import GiftScreen from '../component/Food/Gift/GiftScreen';
 import CreateGiftScreen from '../Admin/component/Manage/GiftManage/CreateGiftScreen';
+import HistoryScreen from '../component/Food/Gift/HistoryScreen';
 
 const Stack = createStackNavigator();
 
@@ -269,6 +270,22 @@ const MainNavigator = () => {
           options={{
             headerShown: true,
             headerTitle: 'Tạo quà đổi thưởng',
+            useNativeDriver: true,
+            gestureEnabled: true,
+            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+            headerStyle: {
+              backgroundColor: '#4c8d6e',
+            },
+            headerTintColor: 'black',
+          }}
+        />
+
+<Stack.Screen
+          name="HistoryScreen"
+          component={HistoryScreen}
+          options={{
+            headerShown: true,
+            headerTitle: 'Lịch sử đổi điểm',
             useNativeDriver: true,
             gestureEnabled: true,
             cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
