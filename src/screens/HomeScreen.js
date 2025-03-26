@@ -9,74 +9,50 @@ import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import {sizes} from '../constants/theme';
 import {useNavigation} from '@react-navigation/native';
-import HistoryBottom from '../component/History/historyBottom';
 
 const HomeScreen = () => {
   const [userLocation, setUserLocation] = useState('Chưa chọn địa chỉ');
   const [userAddresses, setUserAddresses] = useState([]);
   const [popularDishes, setPopularDishes] = useState([]);
   const navigation = useNavigation();
+  
   useEffect(() => {
-    const fetchDishes = async () => {
+    const fetchEvents = async () => {
       try {
-        const dishesSnapshot = await firestore().collection('dishes').get();
-        const dishesData = dishesSnapshot.docs.map(doc => ({
+        const eventsSnapshot = await firestore().collection('EVENTS').get();
+        const eventsData = eventsSnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
         }));
-        setPopularDishes(dishesData);
+        setPopularDishes(eventsData); 
       } catch (error) {
-        console.error('Lỗi khi lấy dữ liệu món ăn:', error);
+        console.error('Lỗi khi lấy dữ liệu sự kiện:', error);
       }
     };
 
-    fetchDishes();
+    fetchEvents();
   }, []);
-
-  useEffect(() => {
-    const fetchUserAddresses = async () => {
-      const user = auth().currentUser;
-      if (user) {
-        try {
-          const userDoc = await firestore()
-            .collection('users')
-            .doc(user.email)
-            .get();
-          if (userDoc.exists) {
-            const userData = userDoc.data();
-            setUserAddresses(userData?.addresses || []);
-            setUserLocation(userData?.addresses?.[0] || 'Chưa chọn địa chỉ');
-          }
-        } catch (error) {
-          console.error('Lỗi khi lấy địa chỉ của người dùng:', error);
-        }
-      }
-    };
-
-    fetchUserAddresses();
-  }, []);
-
-  const handleAddAddress = () => {
-    console.log('Thêm địa chỉ mới');
-  };
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" translucent backgroundColor="#fff" />
-      <MainHeader
-        userLocation={userLocation}
-        addresses={userAddresses}
-        onAddAddress={handleAddAddress}
+      <StatusBar
+        barStyle="dark-content"
+        translucent
+        backgroundColor="#4c8d6e"
       />
-      <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollView}>
-        <SearchBar />
+      <MainHeader />
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        style={styles.scrollView}>
+        {/* <SearchBar /> */}
         <OptionsList />
         <SpecialOffer />
-        <Text style={styles.sectionTitle}>Món ăn phổ biến</Text>
-
+        <View>
+          <Text style={styles.sectionTitle}>Sự kiện sắp tới</Text>
+        </View>
         <PopularDishes dishes={popularDishes} />
       </ScrollView>
-      <HistoryBottom onPress={() => navigation.navigate('HistoryOrders')} style={styles.historyButton} />
     </View>
   );
 };
@@ -133,6 +109,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 20,
     right: 20,
-    zIndex:10,
+    zIndex: 10,
   },
 });

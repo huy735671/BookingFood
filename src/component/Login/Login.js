@@ -22,7 +22,7 @@ import firestore from '@react-native-firebase/firestore';
 const WINDOW_WIDTH = Dimensions.get('window').width;
 
 const Login = () => {
-  const [email, setEmail] = useState('huycustomer@gmail.com');
+  const [email, setEmail] = useState('huynew@gmail.com');
   const [password, setPassword] = useState('123456Huy');
   const [errorMessage, setErrorMessage] = useState('');
   const [pwdHidden, setPwdHidden] = useState(true);
@@ -47,11 +47,10 @@ const Login = () => {
           navigation.navigate('Admin');
         } else if (role === 'user') {
           navigation.navigate('Root');
-        } else if (role === 'partner') {
-          navigation.navigate('Partner');
-        } else {
+        } {
           setErrorMessage('Không tìm thấy vai trò phù hợp.');
         }
+        
       } else {
         setErrorMessage('Không tìm thấy người dùng trong Firestore.');
       }
@@ -148,7 +147,6 @@ export default Login;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    
     backgroundColor: '#7b70f9',
   },
   headerContainer: {
@@ -165,8 +163,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   img: {
-    width: 250,
-    height: 250,
+    width: 200,
+    height: 200,
   },
   avatar: {
     width: 100,

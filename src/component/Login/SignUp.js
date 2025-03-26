@@ -2,14 +2,16 @@ import {
   Dimensions,
   Image,
   SafeAreaView,
+  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
+  Animated,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useState, useRef} from 'react';
 import {colors, sizes} from '../../constants/theme';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {launchImageLibrary} from 'react-native-image-picker';
@@ -30,6 +32,14 @@ const SignUp = () => {
   const [pwdHidden, setPwdHidden] = useState(true);
   const [avatar, setAvatar] = useState(null);
   const navigation = useNavigation();
+  const scrollY = useRef(new Animated.Value(0)).current;
+
+  // Interpolate cho opacity của hình ảnh
+  const imageOpacity = scrollY.interpolate({
+    inputRange: [0, 100],
+    outputRange: [1, 0],
+    extrapolate: 'clamp',
+  });
 
   const handleSelectImage = () => {
     launchImageLibrary({mediaType: 'photo', quality: 1}, response => {
@@ -85,7 +95,6 @@ const SignUp = () => {
     }
   };
   
-  
   return (
     <View style={styles.container}>
       <StatusBar
@@ -93,125 +102,141 @@ const SignUp = () => {
         translucent
         backgroundColor="rgba(0,0,0,0)"
       />
-      <SafeAreaView>
+      
+      <SafeAreaView style={styles.fixedHeader}>
         <View style={styles.headerContainer}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Icon icon="Back" size={40} color="#fff" style={styles.icon} />
           </TouchableOpacity>
         </View>
-        <View style={styles.imageBox}>
-          <Image
-            source={require('../../../assets/images/SingiupIcon.png')}
-            style={styles.img}
-          />
-        </View>
-
-        <View style={styles.signUpContainer}>
-        <TouchableOpacity
-            style={styles.avatarContainer}
-            onPress={handleSelectImage}>
-            {avatar ? (
-              <Image source={{uri: avatar}} style={styles.avatar} />
-            ) : (
-              <Ionicons name="camera-outline" size={24} color="black" />
-            )}
-          </TouchableOpacity>
-          <View style={{marginBottom: 20}} />
-
-          <Text style={styles.label}>Tên của bạn:</Text>
-          <View style={styles.bodyContainer}>
-            <Icon icon="User" size={30} style={styles.LoginIcon} />
-            <TextInput
-              placeholder="Nguyễn Văn A"
-              autoCapitalize="none"
-              style={styles.textInput}
-              onChangeText={setFullName}
-              value={fullName}
-            />
-          </View>
-
-          <Text style={styles.label}>Email:</Text>
-          <View style={styles.bodyContainer}>
-            <Icon icon="Email" size={30} style={styles.LoginIcon} />
-            <TextInput
-              placeholder="name@gmail.com"
-              autoCapitalize="none"
-              style={styles.textInput}
-              onChangeText={setEmail}
-              value={email}
-            />
-          </View>
-
-          <Text style={styles.label}>Mật khẩu:</Text>
-          <View style={styles.bodyContainer}>
-            <Icon icon="Key" size={30} style={styles.LoginIcon} />
-            <TextInput
-              placeholder="********"
-              autoCapitalize="none"
-              style={styles.textInput}
-              secureTextEntry={pwdHidden}
-              onChangeText={setPassword}
-              value={password}
-            />
-            <TouchableOpacity
-              style={styles.eyeIconContainer}
-              onPress={() => setPwdHidden(!pwdHidden)}>
-              <Ionicons
-                name={pwdHidden ? 'eye-off-outline' : 'eye-outline'}
-                size={24}
-                style={{width: 24, height: 24, color: 'gray'}}
-              />
-            </TouchableOpacity>
-          </View>
-
-          <Text style={styles.label}>Nhập lại mật khẩu:</Text>
-          <View style={styles.bodyContainer}>
-            <Icon icon="Key" size={30} style={styles.LoginIcon} />
-            <TextInput
-              placeholder="********"
-              autoCapitalize="none"
-              style={styles.textInput}
-              secureTextEntry={pwdHidden}
-              onChangeText={setConfirmPassword}
-              value={confirmPassword}
-            />
-            <TouchableOpacity
-              style={styles.eyeIconContainer}
-              onPress={() => setPwdHidden(!pwdHidden)}>
-              <Ionicons
-                name={pwdHidden ? 'eye-off-outline' : 'eye-outline'}
-                size={24}
-                style={{width: 24, height: 24, color: 'gray'}}
-              />
-            </TouchableOpacity>
-          </View>
-
-          <Text style={styles.label}>Số điện thoại:</Text>
-          <View style={styles.bodyContainer}>
-            <Icon icon="Phone" size={30} style={styles.LoginIcon} />
-            <TextInput
-              placeholder="0326..."
-              autoCapitalize="none"
-              style={styles.textInput}
-              onChangeText={setPhoneNumber}
-              value={phoneNumber}
-              keyboardType="phone-pad"
-            />
-          </View>
-
-          <View style={styles.forgetPassContainer}>
-            <TouchableOpacity
-              style={{position: 'absolute', right: 0}}
-              onPress={() => navigation.navigate('SignIn')}>
-              <Text style={styles.forgetPassText}>Bạn đã có tài khoản?</Text>
-            </TouchableOpacity>
-          </View>
-
-          <TouchableOpacity style={styles.buttonLogin} onPress={handleSignUp}>
-            <Text style={styles.buttonLoginText}>Đăng ký</Text>
-          </TouchableOpacity>
-        </View>
       </SafeAreaView>
+
+      <Animated.ScrollView
+        showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        onScroll={Animated.event(
+          [{nativeEvent: {contentOffset: {y: scrollY}}}],
+          {useNativeDriver: false}
+        )}
+      >
+        <SafeAreaView>
+          <Animated.View style={styles.imageBox}>
+            <Animated.Image
+              source={require('../../../assets/images/SingiupIcon.png')}
+              style={[styles.img, {opacity: imageOpacity}]}
+            />
+          </Animated.View>
+
+          <View style={styles.signUpContainer}>
+            <TouchableOpacity
+              style={styles.avatarContainer}
+              onPress={handleSelectImage}>
+              {avatar ? (
+                <Image source={{uri: avatar}} style={styles.avatar} />
+              ) : (
+                <Ionicons name="camera-outline" size={24} color="black" />
+              )}
+            </TouchableOpacity>
+            <View style={{marginBottom: 20}} />
+
+            <Text style={styles.label}>Tên của bạn:</Text>
+            <View style={styles.bodyContainer}>
+              <Icon icon="User" size={30} style={styles.LoginIcon} />
+              <TextInput
+                placeholder="Nguyễn Văn A"
+                autoCapitalize="none"
+                style={styles.textInput}
+                onChangeText={setFullName}
+                value={fullName}
+              />
+            </View>
+
+            <Text style={styles.label}>Email:</Text>
+            <View style={styles.bodyContainer}>
+              <Icon icon="Email" size={30} style={styles.LoginIcon} />
+              <TextInput
+                placeholder="name@gmail.com"
+                autoCapitalize="none"
+                style={styles.textInput}
+                onChangeText={setEmail}
+                value={email}
+              />
+            </View>
+
+            <Text style={styles.label}>Mật khẩu:</Text>
+            <View style={styles.bodyContainer}>
+              <Icon icon="Key" size={30} style={styles.LoginIcon} />
+              <TextInput
+                placeholder="********"
+                autoCapitalize="none"
+                style={styles.textInput}
+                secureTextEntry={pwdHidden}
+                onChangeText={setPassword}
+                value={password}
+              />
+              <TouchableOpacity
+                style={styles.eyeIconContainer}
+                onPress={() => setPwdHidden(!pwdHidden)}>
+                <Ionicons
+                  name={pwdHidden ? 'eye-off-outline' : 'eye-outline'}
+                  size={24}
+                  style={{width: 24, height: 24, color: 'gray'}}
+                />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.label}>Nhập lại mật khẩu:</Text>
+            <View style={styles.bodyContainer}>
+              <Icon icon="Key" size={30} style={styles.LoginIcon} />
+              <TextInput
+                placeholder="********"
+                autoCapitalize="none"
+                style={styles.textInput}
+                secureTextEntry={pwdHidden}
+                onChangeText={setConfirmPassword}
+                value={confirmPassword}
+              />
+              <TouchableOpacity
+                style={styles.eyeIconContainer}
+                onPress={() => setPwdHidden(!pwdHidden)}>
+                <Ionicons
+                  name={pwdHidden ? 'eye-off-outline' : 'eye-outline'}
+                  size={24}
+                  style={{width: 24, height: 24, color: 'gray'}}
+                />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.label}>Số điện thoại:</Text>
+            <View style={styles.bodyContainer}>
+              <Icon icon="Phone" size={30} style={styles.LoginIcon} />
+              <TextInput
+                placeholder="0326..."
+                autoCapitalize="none"
+                style={styles.textInput}
+                onChangeText={setPhoneNumber}
+                value={phoneNumber}
+                keyboardType="phone-pad"
+              />
+            </View>
+
+            <View style={styles.forgetPassContainer}>
+              <TouchableOpacity
+                style={{position: 'absolute', right: 0}}
+                onPress={() => navigation.navigate('SignIn')}>
+                <Text style={styles.forgetPassText}>Bạn đã có tài khoản?</Text>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity style={styles.buttonLogin} onPress={handleSignUp}>
+              <Text style={styles.buttonLoginText}>Đăng ký</Text>
+            </TouchableOpacity>
+
+            {/* Thêm khoảng trống phía dưới để dễ dàng cuộn */}
+            <View style={{height: 30}} />
+          </View>
+        </SafeAreaView>
+      </Animated.ScrollView>
     </View>
   );
 };
@@ -223,16 +248,21 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#7b70f9',
   },
+  fixedHeader: {
+    position: 'absolute',
+    zIndex: 10,
+    width: '100%',
+  },
   headerContainer: {
     marginLeft: 10,
     padding: 10,
     marginTop: 50,
   },
   signUpContainer: {
-    height: '100%',
     backgroundColor: colors.light,
     borderTopRightRadius: 50,
     borderTopLeftRadius: 50,
+    paddingBottom: 30,
   },
   icon: {
     backgroundColor: colors.green,
@@ -244,6 +274,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   img: {
+    marginTop: 100,
     width: 180,
     height: 150,
   },

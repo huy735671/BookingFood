@@ -1,116 +1,118 @@
 import {useNavigation} from '@react-navigation/native';
-import React, {useState, useEffect} from 'react';
-import {StyleSheet, Text, View, Image, TouchableOpacity} from 'react-native';
-import firestore from '@react-native-firebase/firestore';
+import React, {useState} from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+  Dimensions,
+} from 'react-native';
+import Icon from '../Icon';
+import {sizes} from '../../constants/theme';
+
+const windowWidth = Dimensions.get('window').width;
 
 const PopularDishes = ({dishes}) => {
-  const [dishesWithStore, setDishesWithStore] = useState([]);
   const [pressedIndex, setPressedIndex] = useState(null);
   const navigation = useNavigation();
 
-  useEffect(() => {
-    const fetchStoreNames = async () => {
-      try {
-        const updatedDishes = await Promise.all(
-          dishes.map(async dish => {
-            const userDoc = await firestore()
-              .collection('users')
-              .doc(dish.ownerEmail)
-              .get();
-            const storeName =
-              userDoc.exists && userDoc.data().storeName
-                ? userDoc.data().storeName
-                : 'Đang cập nhật';
-            return {...dish, store: storeName};
-          }),
-        );
-        setDishesWithStore(updatedDishes);
-      } catch (error) {
-        console.error('Error fetching store names:', error);
-      }
-    };
-
-    fetchStoreNames();
-  }, [dishes]);
-
-  const handlePress = dish => {
-    navigation.navigate('MenuDish', {selectedDish: dish});
-  };
-
-  const formatPrice = price => {
-    if (!price) return '';
-    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  const handlePress = event => {
+    navigation.navigate('EventDetails', {event});
   };
 
   return (
-    <View style={styles.container}>
-      {dishesWithStore.map((dish, index) => (
-        <TouchableOpacity
-          key={dish.id}
-          style={[
-            styles.dishCard,
-            pressedIndex === index && styles.pressedCard,
-          ]}
-          onPressIn={() => setPressedIndex(index)}
-          onPressOut={() => setPressedIndex(null)}
-          onPress={() => handlePress(dish)}>
-          <Image source={{uri: dish.image}} style={styles.dishImage} />
-          <View style={styles.dishInfo}>
-            <Text style={styles.dishName}>{dish.dishName}</Text>
-            <Text style={styles.dishPrice}>{formatPrice(dish.price)}đ</Text>
-            <Text style={styles.storeName}>Cửa hàng: {dish.store}</Text>
-          </View>
-        </TouchableOpacity>
-      ))}
-    </View>
+    <ScrollView
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={styles.scrollContainer}>
+      <View style={styles.container}>
+        {dishes.map((event, index) => (
+          <TouchableOpacity
+            key={event.id}
+            style={[
+              styles.dishCard,
+              pressedIndex === index && styles.pressedCard,
+            ]}
+            onPressIn={() => setPressedIndex(index)}
+            onPressOut={() => setPressedIndex(null)}
+            onPress={() => handlePress(event)}>
+            <Image source={{uri: event.image}} style={styles.dishImage} />
+            <View style={styles.dishInfo}>
+              <Text
+                style={styles.dishName}
+                numberOfLines={1}
+                ellipsizeMode="tail">
+                {event.eventName}
+              </Text>
+              <View style={{flexDirection: 'row'}}>
+                <Icon icon="Location" size={20} color="#4c8d6e" />
+                <Text style={styles.dishPrice}>{event.location}</Text>
+              </View>
+              <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <Icon icon="calendar" size={20} color="#4c8d6e" />
+                <Text style={styles.dishPrice}>
+                  {event.eventDate
+                    ? new Date(event.eventDate).toLocaleDateString('vi-VN')
+                    : 'Chưa có ngày'}
+                </Text>
+              </View>
+              <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <Icon icon="people" size={20} color="#4c8d6e" />
+                <Text style={styles.dishPrice}>
+                  {event.members ? event.members.length : 0} người tham gia
+                </Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    paddingBottom: 10,
+  },
   container: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 20,
+    flexDirection: 'column',
   },
   dishCard: {
-    width: '48%',
+    width: '100%',
     backgroundColor: '#fff',
     borderRadius: 15,
     marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 4,
     padding: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
   },
   pressedCard: {
-    transform: [{scale: 0.95}],
+    transform: [{scale: 0.98}],
     shadowOpacity: 0.1,
   },
   dishImage: {
-    width: '100%',
-    height: 100,
+    width: windowWidth * 0.25,
+    height: windowWidth * 0.25,
     borderRadius: 12,
   },
   dishInfo: {
-    marginTop: 5,
+    marginLeft: 15,
+    flex: 1,
+    justifyContent: 'center',
   },
   dishName: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#4c8d6e',
+    marginBottom: 5,
   },
   dishPrice: {
-    fontSize: 16,
-    color: '#ff5722',
-    marginTop: 5,
-  },
-  storeName: {
-    fontSize: 14,
-    color: '#888',
-    marginTop: 3,
+    fontSize: sizes.body,
+    marginBottom: 5,
+    marginLeft: 5,
   },
 });
 

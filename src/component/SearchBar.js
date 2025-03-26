@@ -41,7 +41,6 @@ const SearchBar = () => {
         });
       }
   
-      // Truyền searchQuery qua SearchResults
       navigation.navigate('SearchResults', {dishes: filteredDishes, query: searchQuery});
     } catch (error) {
       console.error('Error searching dishes:', error);
@@ -60,7 +59,7 @@ const SearchBar = () => {
         </TouchableOpacity>
         <TextInput
           style={styles.searchInput}
-          placeholder="Bạn muốn ăn gì?"
+          placeholder="Tìm gì ở đây nè?"
           placeholderTextColor={colors.gray}
           value={searchQuery}
           onChangeText={setSearchQuery}

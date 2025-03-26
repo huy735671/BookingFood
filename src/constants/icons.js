@@ -25,7 +25,16 @@ const edit = require('../../assets/icons/edit.png');
 const trash = require('../../assets/icons/trash.png');
 const history = require('../../assets/icons/history.png');
 const ArrowRight = require('../../assets/icons/ArrowRight.png');
-
+const leaf = require('../../assets/icons/leaf.png');
+const quest = require('../../assets/icons/quest.png');
+const people = require('../../assets/icons/people.png');
+const calendar = require('../../assets/icons/calendar.png');
+const checked = require('../../assets/icons/checked.png');
+const gift = require('../../assets/icons/gift.png');
+const info = require('../../assets/icons/info.png');
+const clock = require('../../assets/icons/clock.png');
+const like = require('../../assets/icons/like.png');
+const dislike = require('../../assets/icons/dislike.png');
 
  
 export default {
@@ -56,4 +65,14 @@ export default {
   history,
   trash,
   ArrowRight,
+  leaf,
+  quest,
+  people,
+  calendar,
+  checked,
+  gift,
+  info,
+  clock,
+  like,
+  dislike,
 };

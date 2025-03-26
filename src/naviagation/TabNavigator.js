@@ -8,14 +8,20 @@ import HomeNavigator from './HomeNavigator';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import CartScreen from '../screens/CartScreen';
 
+import PeopleScreen from '../screens/PeopleScreen';
+
 const tabs = [
   {
     name: 'Home',
     screen: HomeNavigator,
   },
   {
-    name: 'Cart',
+    name: 'quest',
     screen: CartScreen,
+  },
+  {
+    name: 'people',
+    screen: PeopleScreen,
   },
   {
     name: 'User',

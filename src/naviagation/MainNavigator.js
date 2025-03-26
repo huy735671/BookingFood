@@ -6,24 +6,22 @@ import {
 import {NavigationContainer} from '@react-navigation/native';
 import LoginScreen from '../screens/LoginScreen';
 import TabNavigator from './TabNavigator';
-import ListFood from '../component/Home/ListFood';
-import DishDetail from '../component/Food/DishDetail';
-import MenuDish from '../component/Food/MenuDish';
-import OrderDetails from '../component/Oder/OderDetails';
-import PaymentSuccess from '../screens/PaymentSuccess';
-import PartnerTabNavigator from './PartnerTabNavigator';
 import SignUp from '../component/Login/SignUp';
 import Login from '../component/Login/Login';
-import ManageCategoriesScreen from '../Partner/src/screens/ManageCategoriesScreen';
-import AddDishScreen from '../Partner/src/screens/AddDishScreen';
-import EditDishScreen from '../Partner/src/screens/EditDishScreen';
-import OrderDetailsScreen from '../Partner/src/component/Orders/OrderDetailsScreen';
-import HistoryOrders from '../component/History/HistoryOrders';
 import ProfileScreen from '../component/Profile/ProfileScreen';
 import MenuNavigator from './MenuNavigator';
 import AddUserScreen from '../Admin/component/Manage/AddUserScreen';
 import EditUserScreen from '../Admin/component/Manage/EditUserScreen';
-import SearchResults from '../component/SearchResults';
+import CreateEventScreen from '../Admin/component/Manage/Home/CreateEventScreen';
+import TaskFormScreen from '../Admin/component/Manage/Home/TaskFormScreen';
+import ConfirmTaskScreen from '../component/ConfirmTaskScreen';
+import CreateGroupScreen from '../component/Group/CreateGroupScreen';
+import GroupDetailScreen from '../component/Group/GroupDetailScreen';
+import CreateEvent from '../component/Group/GroupTab/CreateEvent';
+import EventDetailScreen from '../component/Group/EventDetailScreen';
+import EventDetails from '../component/Food/EvenDetails/EventDetails';
+import GiftScreen from '../component/Food/Gift/GiftScreen';
+import CreateGiftScreen from '../Admin/component/Manage/GiftManage/CreateGiftScreen';
 
 const Stack = createStackNavigator();
 
@@ -41,13 +39,6 @@ const MainNavigator = () => {
           }}
         />
 
-        <Stack.Screen
-          name="Partner"
-          component={PartnerTabNavigator}
-          options={{
-            headerShown: false,
-          }}
-        />
         <Stack.Screen
           name="Admin"
           component={MenuNavigator}
@@ -80,14 +71,32 @@ const MainNavigator = () => {
           }}
         />
 
+        
+
         <Stack.Screen
-          name="ListFood"
-          component={ListFood}
+          name="CreateEventScreen"
+          component={CreateEventScreen}
           options={{
             headerShown: true,
+            headerTitle: 'Tạo sự kiện mới',
             useNativeDriver: true,
             gestureEnabled: true,
-            headerTitle: '',
+            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+            headerStyle: {
+              backgroundColor: '#4c8d6e',
+            },
+            headerTintColor: '#fff',
+          }}
+        />
+
+        <Stack.Screen
+          name="GiftScreen"
+          component={GiftScreen}
+          options={{
+            headerShown: true,
+            headerTitle: 'Đổi điểm EcoWarriors',
+            useNativeDriver: true,
+            gestureEnabled: true,
             cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
             headerStyle: {
               backgroundColor: '#4c8d6e',
@@ -96,142 +105,96 @@ const MainNavigator = () => {
           }}
         />
         <Stack.Screen
-          name="MenuDish"
-          component={MenuDish}
+          name="TaskFormScreen"
+          component={TaskFormScreen}
+          options={{
+            headerShown: true,
+            headerTitle: 'Chỉnh sửa nhiệm vụ',
+            useNativeDriver: true,
+            gestureEnabled: true,
+            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+            headerStyle: {
+              backgroundColor: '#4c8d6e',
+            },
+            headerTintColor: '#fff',
+          }}
+        />
+        <Stack.Screen
+          name="ConfirmTaskScreen"
+          component={ConfirmTaskScreen}
           options={{
             headerShown: false,
-            headerTitle: 'Thực đơn quán',
+            headerTitle: 'Chỉnh sửa nhiệm vụ',
             useNativeDriver: true,
             gestureEnabled: true,
             cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
             headerStyle: {
-              backgroundColor: '#fff',
+              backgroundColor: '#4c8d6e',
             },
-            headerTintColor: 'black',
+            headerTintColor: '#fff',
+          }}
+        />
+
+        <Stack.Screen
+          name="CreateGroupScreen"
+          component={CreateGroupScreen}
+          options={{
+            headerShown: true,
+            headerTitle: 'Tạo nhóm mới',
+            useNativeDriver: true,
+            gestureEnabled: true,
+            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+            headerStyle: {
+              backgroundColor: '#4c8d6e',
+            },
+            headerTintColor: '#fff',
           }}
         />
         <Stack.Screen
-          name="DishDetail"
-          component={DishDetail}
+          name="CreateEvent"
+          component={CreateEvent}
+          options={{
+            headerShown: true,
+            headerTitle: 'Tạo sự kiện mới cho nhóm',
+            useNativeDriver: true,
+            gestureEnabled: true,
+            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+            headerStyle: {
+              backgroundColor: '#4c8d6e',
+            },
+            headerTintColor: '#fff',
+          }}
+        />
+
+        <Stack.Screen
+          name="EventDetailScreen"
+          component={EventDetailScreen}
+          options={{
+            headerShown: true,
+            headerTitle: 'Chi tiết sự kiện',
+            useNativeDriver: true,
+            gestureEnabled: true,
+            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+            headerStyle: {
+              backgroundColor: '#4c8d6e',
+            },
+            headerTintColor: '#fff',
+          }}
+        />
+
+        <Stack.Screen
+          name="GroupDetailScreen"
+          component={GroupDetailScreen}
           options={{
             headerShown: false,
-            headerTitle: 'Chi tiết món ăn',
+            headerTitle: '',
             useNativeDriver: true,
             gestureEnabled: true,
             cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
             headerStyle: {
-              backgroundColor: '#fff',
+              backgroundColor: '#4c8d6e',
             },
-            headerTintColor: 'black',
-          }}
-        />
-
-        <Stack.Screen
-          name="OrderDetails"
-          component={OrderDetails}
-          options={{
-            headerShown: true,
-            headerTitle: 'Thanh toán đơn hàng',
-            useNativeDriver: true,
-            gestureEnabled: true,
-            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
-            headerStyle: {
-              backgroundColor: '#fff',
-            },
-            headerTintColor: 'black',
-          }}
-        />
-
-        <Stack.Screen
-          name="PaymentSuccess"
-          component={PaymentSuccess}
-          options={{
-            headerShown: false,
-            headerTitle: 'Thanh toán đơn hàng',
-            useNativeDriver: true,
-            gestureEnabled: true,
-            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
-            headerStyle: {
-              backgroundColor: '#fff',
-            },
-            headerTintColor: 'black',
-          }}
-        />
-        <Stack.Screen
-          name="ManageCategories"
-          component={ManageCategoriesScreen}
-          options={{
-            headerShown: true,
-            headerTitle: 'Quản lý danh mục',
-            useNativeDriver: true,
-            gestureEnabled: true,
-            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
-            headerStyle: {
-              backgroundColor: '#fff',
-            },
-            headerTintColor: 'black',
-          }}
-        />
-
-        <Stack.Screen
-          name="AddDishScreen"
-          component={AddDishScreen}
-          options={{
-            headerShown: true,
-            headerTitle: 'Quản lý danh mục',
-            useNativeDriver: true,
-            gestureEnabled: true,
-            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
-            headerStyle: {
-              backgroundColor: '#fff',
-            },
-            headerTintColor: 'black',
-          }}
-        />
-
-        <Stack.Screen
-          name="EditDishScreen"
-          component={EditDishScreen}
-          options={{
-            headerShown: true,
-            headerTitle: 'Chỉnh sửa món ăn',
-            useNativeDriver: true,
-            gestureEnabled: true,
-            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
-            headerStyle: {
-              backgroundColor: '#fff',
-            },
-            headerTintColor: 'black',
-          }}
-        />
-        <Stack.Screen
-          name="OrderDetailsScreen"
-          component={OrderDetailsScreen}
-          options={{
-            headerShown: true,
-            headerTitle: 'Chi tiết đơn hàng',
-            useNativeDriver: true,
-            gestureEnabled: true,
-            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
-            headerStyle: {
-              backgroundColor: '#fff',
-            },
-            headerTintColor: 'black',
-          }}
-        />
-        <Stack.Screen
-          name="HistoryOrders"
-          component={HistoryOrders}
-          options={{
-            headerShown: true,
-            headerTitle: 'Lịch sử đơn hàng',
-            useNativeDriver: true,
-            gestureEnabled: true,
-            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
-            headerStyle: {
-              backgroundColor: '#fff',
-            },
-            headerTintColor: 'black',
+            headerTintColor: '#fff',
           }}
         />
 
@@ -240,7 +203,7 @@ const MainNavigator = () => {
           component={ProfileScreen}
           options={{
             headerShown: true,
-            headerTitle: 'Lịch sử đơn hàng',
+            headerTitle: 'Thông tin cá nhân',
             useNativeDriver: true,
             gestureEnabled: true,
             cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
@@ -282,17 +245,35 @@ const MainNavigator = () => {
             headerTintColor: 'black',
           }}
         />
+       
+
         <Stack.Screen
-          name="SearchResults"
-          component={SearchResults}
+          name="EventDetails"
+          component={EventDetails}
           options={{
-            headerShown: true,
+            headerShown: false,
             headerTitle: 'Tìm kiếm',
             useNativeDriver: true,
             gestureEnabled: true,
             cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
             headerStyle: {
               backgroundColor: '#fff',
+            },
+            headerTintColor: 'black',
+          }}
+        />
+
+<Stack.Screen
+          name="CreateGiftScreen"
+          component={CreateGiftScreen}
+          options={{
+            headerShown: true,
+            headerTitle: 'Tạo quà đổi thưởng',
+            useNativeDriver: true,
+            gestureEnabled: true,
+            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+            headerStyle: {
+              backgroundColor: '#4c8d6e',
             },
             headerTintColor: 'black',
           }}

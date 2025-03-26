@@ -108,13 +108,32 @@ const CustomDrawerContent = ({navigation, state}) => {
         <TouchableOpacity
           onPress={() => navigation.navigate('CategoryManagementScreen')}
           style={getDrawerItemStyle('CategoryManagementScreen')}>
-          <Text style={styles.drawerItem}>Quản lý danh mục</Text>
+          <Text style={styles.drawerItem}>Quản lý sự kiện</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('TaskScreen')}
+          style={getDrawerItemStyle('TaskScreen')}>
+          <Text style={styles.drawerItem}>Quản lý nhiệm vụ</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('GroupManagementScreen')}
+          style={getDrawerItemStyle('GroupManagementScreen')}>
+          <Text style={styles.drawerItem}>Quản lý hội nhóm</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => navigation.navigate('GiftManage')}
+          style={getDrawerItemStyle('GiftManage')}>
+          <Text style={styles.drawerItem}>Quản lý phần thưởng</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity
           onPress={() => navigation.navigate('UsersManage')}
           style={getDrawerItemStyle('UsersManage')}>
           <Text style={styles.drawerItem}>Quản lý người dùng</Text>
         </TouchableOpacity>
+      
+
       </View>
 
       <View style={styles.logoutContainer}>

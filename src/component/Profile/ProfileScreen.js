@@ -9,6 +9,7 @@ import {
   Platform,
   ScrollView,
   Modal,
+  StatusBar,
 } from 'react-native';
 import Icons from 'react-native-vector-icons/MaterialIcons';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -126,6 +127,11 @@ const ProfileScreen = () => {
 
   return (
     <ScrollView style={styles.container}>
+      <StatusBar
+        barStyle="dark-content"
+        translucent
+        backgroundColor="rgba(0,0,0,0)"
+      />
       <View style={styles.avatarContainer}>
         {avatar ? (
           <Image source={{uri: avatar}} style={styles.avatar} />

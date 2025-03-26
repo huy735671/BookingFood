@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import {
   View,
   Text,
@@ -6,429 +6,379 @@ import {
   TouchableOpacity,
   SafeAreaView,
   ActivityIndicator,
+  StatusBar,
+  ScrollView,
+  Alert,
 } from 'react-native';
-import CheckBox from '@react-native-community/checkbox';
-import {colors, sizes} from '../constants/theme';
-import {useNavigation} from '@react-navigation/native';
-import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
+import {colors, sizes} from '../constants/theme';
+import auth from '@react-native-firebase/auth';
+import Icon from '../component/Icon';
 
 const CartScreen = () => {
   const navigation = useNavigation();
-  const [items, setItems] = useState([]);
+  const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('all');
+  const [userPoints, setUserPoints] = useState(0);
 
-  const fetchCartItems = async () => {
+  const fetchTasks = async () => {
     try {
+      setLoading(true);
       const user = auth().currentUser;
-      if (user) {
-        const userEmail = user.email;
-  
-        const cartSnapshot = await firestore()
-          .collection('cart')
-          .where('email', '==', userEmail)
-          .get();
-  
-        const cartItems = cartSnapshot.docs.map(doc => ({
-          ...doc.data(),
-          id: doc.id, 
-        }));
-  
-        const updatedItems = cartItems.map(item => ({
-          ...item,
-          quantity: 1,
-        }));
-  
-        // Sử dụng reduce để nhóm các món ăn trùng vào một
-        const groupedItems = updatedItems.reduce((acc, item) => {
-          const key = `${item.dishId}-${item.email}`; // Tạo key duy nhất từ dishId và email
-          if (!acc[key]) {
-            acc[key] = { ...item, quantity: 1 }; // Tạo món ăn mới với số lượng là 1
-          } else {
-            acc[key].quantity += 1; // Nếu món ăn đã tồn tại, cộng dồn số lượng
-          }
-          return acc;
-        }, {});
-  
-        const finalItems = await Promise.all(
-          Object.values(groupedItems).map(async item => {
-            const dishSnapshot = await firestore()
-              .collection('dishes')
-              .doc(item.dishId)
-              .get();
-  
-            if (dishSnapshot.exists) {
-              const dishData = dishSnapshot.data();
-  
-              const userSnapshot = await firestore()
-                .collection('users')
-                .where('email', '==', dishData.ownerEmail)
-                .get();
-  
-              let storeName = 'Đang cập nhật'; 
-              if (!userSnapshot.empty) {
-                storeName = userSnapshot.docs[0].data().storeName || 'Đang cập nhật';
-              }
-  
-              return {
-                ...item,
-                dishDetails: dishData,
-                storeName, // Add the storeName field
-              };
-            }
-            return item;
-          }),
-        );
-  
-        setItems(finalItems); // Cập nhật các món ăn với thông tin dishDetails và storeName
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      // Lấy ngày hiện tại để kiểm tra và reset nhiệm vụ
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayStr = today.toISOString().split('T')[0];
+
+      // Lấy tất cả nhiệm vụ từ collection TASKS
+      const taskSnapshot = await firestore().collection('TASKS').get();
+      const allTasks = taskSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        completed: false, // Trạng thái mặc định là chưa hoàn thành
+      }));
+
+      // Lọc ra các nhiệm vụ daily
+      const dailyTasks = allTasks.filter(task => task.taskType === 'daily');
+
+      // Lấy danh sách các nhiệm vụ đã hoàn thành trong ngày
+      const completedTasksSnapshot = await firestore()
+        .collection('USER_TASKS')
+        .where('email', '==', user.email)
+        .where('completedDate', '==', todayStr)
+        .get();
+
+      // Lấy ID của các nhiệm vụ đã hoàn thành
+      const completedTaskIds = completedTasksSnapshot.docs.map(
+        doc => doc.data().taskId,
+      );
+
+      // Cập nhật trạng thái cho các nhiệm vụ đã hoàn thành
+      const updatedDailyTasks = dailyTasks.map(task => ({
+        ...task,
+        completed: completedTaskIds.includes(task.id),
+      }));
+
+      // Chọn ngẫu nhiên 7 nhiệm vụ hoặc lấy tất cả nếu có ít hơn 7
+      const shuffledTasks = updatedDailyTasks
+        .sort(() => 0.5 - Math.random())
+        .slice(0, Math.min(7, updatedDailyTasks.length));
+
+      setTasks(shuffledTasks);
+
+      // Lấy tổng điểm hiện tại của người dùng
+      const userPointsDoc = await firestore()
+        .collection('USER_POINTS')
+        .doc(user.email)
+        .get();
+
+      if (userPointsDoc.exists) {
+        setUserPoints(userPointsDoc.data().points || 0);
       }
     } catch (error) {
-      console.error('Error fetching cart items:', error);
+      console.error('Lỗi khi lấy nhiệm vụ:', error);
     } finally {
       setLoading(false);
     }
   };
-  
 
-  // Call fetchCartItems again when the screen loads or when "Cập nhật" button is pressed
-  useEffect(() => {
+  useFocusEffect(
+    useCallback(() => {
+      fetchTasks();
+    }, []),
+  );
+
+  const handleTabChange = tab => {
+    setActiveTab(tab);
+  };
+
+  const handleCompleteTask = task => {
+    // Kiểm tra nếu nhiệm vụ đã hoàn thành
+    if (task.completed) {
+      Alert.alert(
+        'Thông báo',
+        'Bạn đã hoàn thành nhiệm vụ này trong hôm nay rồi',
+      );
+      return;
+    }
+
+    // Chuyển đến màn hình xác nhận nhiệm vụ
+    navigation.navigate('ConfirmTaskScreen', {task});
+  };
+
+  const handleGiftPress = () => {
     const user = auth().currentUser;
     if (user) {
-      const userEmail = user.email;
-  
-      const unsubscribe = firestore()
-        .collection('cart')
-        .where('email', '==', userEmail)
-        .onSnapshot(async snapshot => {
-          const cartItems = snapshot.docs.map(doc => ({
-            ...doc.data(),
-            id: doc.id,
-          }));
-  
-          const updatedItems = cartItems.map(item => ({
-            ...item,
-            quantity: 1,
-          }));
-  
-          const groupedItems = updatedItems.reduce((acc, item) => {
-            const key = `${item.dishId}-${item.email}`;
-            if (!acc[key]) {
-              acc[key] = { ...item, quantity: 1 };
-            } else {
-              acc[key].quantity += 1;
-            }
-            return acc;
-          }, {});
-  
-          const finalItems = await Promise.all(
-            Object.values(groupedItems).map(async item => {
-              const dishSnapshot = await firestore()
-                .collection('dishes')
-                .doc(item.dishId)
-                .get();
-  
-              if (dishSnapshot.exists) {
-                const dishData = dishSnapshot.data();
-  
-                const userSnapshot = await firestore()
-                  .collection('users')
-                  .where('email', '==', dishData.ownerEmail)
-                  .get();
-  
-                let storeName = 'Đang cập nhật';
-                if (!userSnapshot.empty) {
-                  storeName = userSnapshot.docs[0].data().storeName || 'Đang cập nhật';
-                }
-  
-                return {
-                  ...item,
-                  dishDetails: dishData,
-                  storeName,
-                };
-              }
-              return item;
-            })
-          );
-  
-          setItems(finalItems);
-          setLoading(false);
-        });
-  
-      return () => unsubscribe(); 
+      navigation.navigate('GiftScreen', {userEmail: user.email});
     }
+  };
+
+  const totalTasks = tasks.length;
+  const completedTasks = tasks.filter(task => task.completed).length;
+  const totalPoints = tasks.reduce(
+    (total, task) => total + (task.completed ? task.rewardPoints : 0),
+    0,
+  );
+
+  const filterTasks = () => {
+    if (activeTab === 'all') return tasks;
+    if (activeTab === 'incomplete')
+      return tasks.filter(task => !task.completed);
+    if (activeTab === 'completed') return tasks.filter(task => task.completed);
+  };
+
+  const progressPercentage = totalTasks
+    ? (completedTasks / totalTasks) * 100
+    : 0;
+
+  // Tính toán thời gian còn lại trong ngày
+  const getTimeRemaining = () => {
+    const now = new Date();
+    const end = new Date(now);
+    end.setHours(23, 59, 59, 999);
+
+    const diff = end - now;
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+    return `${hours}:${minutes < 10 ? '0' + minutes : minutes}:${
+      seconds < 10 ? '0' + seconds : seconds
+    }`;
+  };
+
+  const [timeRemaining, setTimeRemaining] = useState(getTimeRemaining());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeRemaining(getTimeRemaining());
+    }, 1000);
+
+    return () => clearInterval(timer);
   }, []);
-  
-
-  const handleRefresh = () => {
-    setLoading(true);
-    fetchCartItems(); 
-  };
-
-  const toggleSelectItem = id => {
-    setItems(prevItems =>
-      prevItems.map(item =>
-        item.id === id ? {...item, selected: !item.selected} : item,
-      ),
-    );
-  };
-
-  const updateQuantity = (id, increment) => {
-    setItems(prevItems =>
-      prevItems.map(item =>
-        item.id === id
-          ? {...item, quantity: Math.max(item.quantity + increment, 1)} 
-          : item,
-      ),
-    );
-  };
-
-  const removeItem = async id => {
-    try {
-      const itemToDelete = items.find(item => item.id === id);
-      
-      if (itemToDelete) {
-        const dishIdToRemove = itemToDelete.dishId;
-        const emailToRemove = itemToDelete.email;
-    
-        const cartSnapshot = await firestore()
-          .collection('cart')
-          .where('dishId', '==', dishIdToRemove)
-          .where('email', '==', emailToRemove)
-          .get();
-    
-        const batch = firestore().batch();
-        cartSnapshot.docs.forEach(doc => {
-          batch.delete(doc.ref);
-        });
-    
-        await batch.commit();  
-    
-        setItems(prevItems => prevItems.filter(item => !(item.dishId === dishIdToRemove && item.email === emailToRemove)));
-      }
-    } catch (error) {
-      console.error('Error removing item:', error);
-    }
-  };
-  
-  
-
-  const totalPrice = items.reduce((total, item) => {
-    // Kiểm tra giá trị price và quantity có hợp lệ hay không
-    if (item.selected && item.dishDetails?.price && item.quantity > 0) {
-      return total + item.dishDetails.price * item.quantity;
-    }
-    return total;
-  }, 0);
-
-  const handleOrder = () => {
-    const selectedItems = items.filter(item => item.selected);
-    if (selectedItems.length > 0) {
-      navigation.navigate('OrderDetails', {
-        items: selectedItems, 
-      });
-    } else {
-      alert('Bạn chưa chọn món nào để đặt hàng!');
-    }
-  };
-
-  const groupedItems = items.reduce((acc, item) => {
-    if (!acc[item.storeName]) {
-      acc[item.storeName] = [];
-    }
-    acc[item.storeName].push(item);
-    return acc;
-  }, {});
-
-  const formatCurrency = amount => {
-    if (isNaN(amount) || amount === null || amount === undefined) {
-      return '0 đ';
-    }
-    return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' đ';
-  };
 
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={{textAlign: 'center', marginTop: 20}}>Đang tải lại...</Text>
+        <Text style={{textAlign: 'center', marginTop: 20}}>
+          Đang tải nhiệm vụ...
+        </Text>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.bodyContainer}>
+      <StatusBar
+        barStyle="dark-content"
+        translucent
+        backgroundColor="#4c8d6e"
+      />
       <View style={styles.header}>
-        <Text style={styles.title}>Giỏ hàng của bạn</Text>
-        <TouchableOpacity onPress={handleRefresh} style={styles.refreshButton}>
-          <Text style={styles.refreshButtonText}>Cập nhật</Text>
+        <Text style={styles.title}>Nhiệm vụ hằng ngày</Text>
+        <TouchableOpacity onPress={handleGiftPress}>
+          <Icon icon="gift" size={20} color={colors.light} />
         </TouchableOpacity>
       </View>
-
-      {Object.keys(groupedItems).map(storeName => (
-        <View key={storeName} style={styles.storeContainer}>
-          <Text style={styles.storeTitle}>{storeName}</Text>
-          {groupedItems[storeName].map((item, index) => (
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        <View style={styles.progressContainer}>
+          <View style={styles.progressView}>
+            <Text style={styles.progressText}>Tiến độ hôm nay</Text>
+            <Text style={styles.progressText}>
+              {completedTasks}/{totalTasks} nhiệm vụ
+            </Text>
+          </View>
+          <View style={styles.progressBar}>
             <View
-              key={`${storeName}-${item.id || index}`}
-              style={styles.itemContainer}>
-              <CheckBox
-                value={item.selected}
-                onValueChange={() => toggleSelectItem(item.id)}
-              />
-              <View style={styles.itemDetails}>
-                <Text style={styles.itemName}>
-                  {item.dishDetails?.name || item.dishName}
-                </Text>
-                <Text style={styles.itemPrice}>
-                  {formatCurrency(Number(item.dishDetails?.price) || 0)}
-                </Text>
+              style={[styles.progress, {width: `${progressPercentage}%`}]}
+            />
+          </View>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              paddingTop: 10,
+            }}>
+            <View>
+              <Text>Điểm đã kiếm được</Text>
+              <Text style={styles.pointsText}>{totalPoints} điểm</Text>
+            </View>
+            <View>
+              <Text>Thời gian còn lại</Text>
+              <Text style={styles.pointsText}>{timeRemaining}</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.tabsContainer}>
+          <TouchableOpacity
+            onPress={() => handleTabChange('all')}
+            style={[styles.tabButton, activeTab === 'all' && styles.activeTab]}>
+            <Text style={styles.tabText}>Tất cả</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => handleTabChange('incomplete')}
+            style={[
+              styles.tabButton,
+              activeTab === 'incomplete' && styles.activeTab,
+            ]}>
+            <Text style={styles.tabText}>Chưa hoàn thành</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => handleTabChange('completed')}
+            style={[
+              styles.tabButton,
+              activeTab === 'completed' && styles.activeTab,
+            ]}>
+            <Text style={styles.tabText}>Đã hoàn thành</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View
+          style={styles.taskListContainer}
+          showsVerticalScrollIndicator={false}>
+          {filterTasks().map(task => (
+            <View
+              key={task.id}
+              style={[
+                styles.taskItem,
+                task.completed && {borderColor: colors.green},
+              ]}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}>
+                <Text style={styles.taskTitle}>{task.taskName}</Text>
+                <Text style={styles.taskPoints}>+{task.rewardPoints}</Text>
               </View>
-              <View style={styles.quantityContainer}>
-                <TouchableOpacity onPress={() => updateQuantity(item.id, -1)}>
-                  <Text style={styles.quantityButton}>-</Text>
+              <Text style={styles.taskDescription}>{task.taskDescription}</Text>
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={styles.detailButton}
+                  onPress={() =>
+                    navigation.navigate('TaskDetail', {taskId: task.id})
+                  }>
+                  <View style={styles.detailsButton}>
+                    <Text style={styles.buttonText}>Chi tiết</Text>
+                  </View>
                 </TouchableOpacity>
-                <Text style={styles.quantity}>{item.quantity}</Text>
-                <TouchableOpacity onPress={() => updateQuantity(item.id, 1)}>
-                  <Text style={styles.quantityButton}>+</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => removeItem(item.id)}>
-                  <Text style={styles.removeButton}>Xóa</Text>
+                <TouchableOpacity
+                  style={[
+                    styles.completeButton,
+                    task.completed && {backgroundColor: '#ccc'},
+                  ]}
+                  disabled={task.completed}
+                  onPress={() => handleCompleteTask(task)}>
+                  <Text style={styles.buttonText}>
+                    {task.completed ? 'Đã hoàn thành' : 'Hoàn thành'}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
           ))}
         </View>
-      ))}
-
-      <View
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          right: 0,
-          left: 0,
-          padding: 20,
-          borderTopWidth:1,
-          backgroundColor:'#fff',
-          borderColor:'#ddd',
-        }}>
-        <View style={styles.footer}>
-          <Text style={styles.totalText}>Tổng cộng:</Text>
-          <Text style={styles.totalAmount}>{formatCurrency(totalPrice)}</Text>
-        </View>
-
-        <TouchableOpacity style={styles.orderButton} onPress={handleOrder}>
-          <Text style={styles.orderButtonText}>Tiến hành đặt hàng</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    marginTop: 50,
-    padding: 20,
+  bodyContainer: {
+    marginTop: 40,
     backgroundColor: '#fff',
   },
+  container: {
+    padding: 10,
+  },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottomWidth:1,
-    borderColor:'#ddd',
+    justifyContent: 'space-between',
+    flexDirection: 'row',
+    backgroundColor: colors.green,
+    padding: 10,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 20,
+    color: colors.light,
   },
-  refreshButton: {
-    backgroundColor: '#4CAF50',
-    padding: 10,
-    borderRadius: 5,
+  progressContainer: {
+    borderRadius: 6,
+    borderColor: colors.green,
+    marginBottom: 12,
+    borderWidth: 1,
+    padding: 20,
   },
-  refreshButtonText: {
-    color: '#fff',
+  progressView: {flexDirection: 'row', justifyContent: 'space-between'},
+  progressText: {
+    color: colors.green,
     fontSize: 16,
+    marginBottom: 5,
+    paddingBottom: 5,
   },
-  storeContainer: {
+  progressBar: {height: 10, backgroundColor: '#f0f0f0', borderRadius: 5},
+  progress: {height: '100%', backgroundColor: colors.primary, borderRadius: 5},
+  pointsText: {fontSize: sizes.h3, fontWeight: 'bold', color: colors.green},
+
+  tabsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: colors.green,
+    borderRadius: 6,
+  },
+  activeTab: {backgroundColor: colors.green, borderRadius: 6},
+  tabButton: {padding: 10},
+  tabText: {fontSize: sizes.body, fontWeight: 'bold'},
+  taskListContainer: {flex: 1},
+  taskItem: {
     padding: 10,
-    backgroundColor: '#f8f8f8',
+    marginBottom: 15,
     borderRadius: 5,
     borderWidth: 1,
     borderColor: '#ddd',
   },
-  storeTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  itemContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-  },
-  itemDetails: {
-    flex: 1,
-    marginLeft: 10,
-  },
-  itemName: {
+  taskTitle: {fontSize: 18, fontWeight: 'bold', flexShrink: 1},
+  taskPoints: {
     color: colors.primary,
     fontWeight: 'bold',
-    fontSize: sizes.h3,
-  },
-  itemPrice: {
+    fontSize: 16,
     marginTop: 5,
   },
-  quantityContainer: {
+  taskDescription: {fontSize: 14, marginTop: 5},
+  buttonContainer: {
     flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 10,
     alignItems: 'center',
   },
-  quantityButton: {
-    fontSize: 18,
-    paddingHorizontal: 10,
+  completeButton: {
+    backgroundColor: colors.green,
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 5,
   },
-  quantity: {
-    fontSize: 18,
-    width: 30,
-    textAlign: 'center',
+  detailsButton: {
+    borderWidth: 1,
+    padding: 6,
+    marginRight: 5,
+    borderRadius: 5,
   },
-  removeButton: {
-    color: 'red',
-    marginLeft: 10,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  totalText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  totalAmount: {
-    fontSize: 18,
-    fontWeight: 'bold',
+  buttonText: {
     color: colors.primary,
-  },
-  orderButton: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 15,
-    borderRadius: 10,
-    marginTop: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  orderButtonText: {
-    color: '#fff',
-    fontSize: 18,
     fontWeight: 'bold',
+    fontSize: 14,
   },
 });
 

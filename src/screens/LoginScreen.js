@@ -14,9 +14,9 @@ const LoginScreen = ({ navigation }) => {
       <ImageBackground source={require('../../assets/images/background.jpg')} style={styles.background}>
         <View style={styles.welcomeContainer}>
 
-          <Image source={require('../../assets/images/Logo.png')} style={styles.logo} />
-
-          <Text style={styles.welcomeText}>Chào mừng đến với QickEats</Text>
+          {/* <Image source={require('../../assets/images/Logo.png')} style={styles.logo} /> */}
+    <View style={styles.logo} />
+          <Text style={styles.welcomeText}>Chào mừng đến với EcoWarriors</Text>
 
           <View>
             <Image source={require('../../assets/images/booking.png')} style={styles.image} />
@@ -50,7 +50,6 @@ const styles = StyleSheet.create({
   welcomeContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 40,
   },
   logo: {
     width: 80, 
